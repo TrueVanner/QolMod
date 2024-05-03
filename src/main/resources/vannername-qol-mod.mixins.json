@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "net.vannername.qol.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ExampleMixin",
+    "LivingEntityMixin",
+    "PlayerManagerMixin",
+    "PlayerMixin",
+    "ServerPlayerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+	}
+}

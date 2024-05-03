@@ -1,0 +1,29 @@
+package net.vannername.qol
+
+import eu.pb4.playerdata.api.storage.JsonDataStorage
+import eu.pb4.playerdata.api.storage.PlayerDataStorage
+import net.fabricmc.api.ModInitializer
+import net.vannername.qol.commands.*
+import net.vannername.qol.gui.MainGUI
+import net.vannername.qol.schemes.PlayerData
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+
+object QoLMod : ModInitializer {
+	const val MOD_ID = "vannername-qol-mod"
+	@JvmField
+	val logger: Logger = LoggerFactory.getLogger(MOD_ID)
+	@JvmField
+	var DATA_STORAGE: PlayerDataStorage<PlayerData> = JsonDataStorage("qolmodparams", PlayerData::class.java)
+
+	override fun onInitialize() {
+//		MidnightConfig.init(MOD_ID, MidnightConfigExample::class.java)
+		EnderChestOpener()
+//		SetDeathCoords()
+		ConfigureProperty()
+		DisplayActionbarCoords()
+		Testing()
+		MainGUI()
+	}
+}
