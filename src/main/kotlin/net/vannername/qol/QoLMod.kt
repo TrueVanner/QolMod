@@ -4,6 +4,7 @@ import eu.pb4.playerdata.api.storage.JsonDataStorage
 import eu.pb4.playerdata.api.storage.PlayerDataStorage
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
+import net.minecraft.test.TestFunctions
 import net.vannername.qol.commands.*
 import net.vannername.qol.gui.MainGUI
 import net.vannername.qol.schemes.PlayerData
@@ -25,8 +26,10 @@ object QoLMod : ModInitializer {
 //		MidnightConfig.init(MOD_ID, MidnightConfigExample::class.java)
 		EnderChestOpener()
 		ConfigureProperty()
-		Testing()
+//		Testing()
 		MainGUI()
+
+
 
 		ServerTickEvents.END_WORLD_TICK.register { world ->
 			for(p in world.players) {

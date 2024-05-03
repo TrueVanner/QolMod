@@ -32,6 +32,12 @@
 				"value": "net.vannername.qol.QoLModDataGenerator",
 				"adapter": "kotlin"
 			}
+		],
+		"fabric-gametest": [
+			{
+				"value": "net.vannername.qol.tests.GameTests",
+				"adapter": "kotlin"
+			}
 		]
 	},
 	"mixins": [

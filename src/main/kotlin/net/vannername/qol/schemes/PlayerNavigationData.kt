@@ -1,11 +1,6 @@
 package net.vannername.qol.schemes
 
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.server.MinecraftServer
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.Identifier
-import net.vannername.qol.utils.ConfigUtils.ConfigProperties.*
+import net.vannername.qol.utils.ConfigUtils.ConfigProperty.*
 import net.vannername.qol.utils.ConfigUtils.defaultPlayerConfig
 import net.vannername.qol.utils.Location
 

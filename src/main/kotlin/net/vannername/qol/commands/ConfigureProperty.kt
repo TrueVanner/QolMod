@@ -14,12 +14,12 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.vannername.qol.utils.ConfigUtils
+import net.vannername.qol.utils.ConfigUtils.configurableParams
 import net.vannername.qol.utils.ConfigUtils.createAndLoadCustomData
 import net.vannername.qol.utils.ConfigUtils.getConfig
 import net.vannername.qol.utils.ConfigUtils.propertyNames
 import net.vannername.qol.utils.ConfigUtils.setConfig
 import net.vannername.qol.utils.ConfigUtils.toBoolean
-import net.vannername.qol.utils.Utils
 import net.vannername.qol.utils.Utils.commandError
 import net.vannername.qol.utils.Utils.multiColored
 import java.awt.Color
@@ -61,18 +61,24 @@ class ConfigureProperty {
     }
 
     @Throws(CommandSyntaxException::class)
-    private fun run(param: String, value: String, onlyProp: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
+    private fun run(paramName: String, value: String, onlyProp: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
+        val param: ConfigUtils.ConfigProperty
 
-        val p = ctx.source.playerOrThrow
         try {
-            val requiredType = ConfigUtils.ConfigProperties.valueOf(param.uppercase()).type
-            if(requiredType !in ConfigUtils.configurableTypes) {
+            param = ConfigUtils.ConfigProperty.valueOf(paramName.uppercase())
+            if(param !in configurableParams) {
                 return commandError(ctx, "This parameter can't be configured, as it doesn't store a primitive value")
             }
+        } catch (e: IllegalArgumentException) {
+            return commandError(ctx, "This parameter can't be configured, as it doesn't exist")
+        }
 
+        val p = ctx.source.playerOrThrow
+
+        try {
             val newValue = if(onlyProp) {
                 try {
-                    !toBoolean(getConfig(p, param) as Byte)
+                    !toBoolean(p.getConfig(param) as Byte)
                 } catch (e: ClassCastException) {
                     throw RuntimeException("Provide a new value for the property.")
                 }
@@ -80,28 +86,26 @@ class ConfigureProperty {
                 convertValue(value)
             }
 
-            if(newValue::class.simpleName != requiredType) {
-                return commandError(ctx, "Config parameter $param only accepts values of type $requiredType as input, you provided ${newValue::class.simpleName}")
+            if(newValue::class.simpleName != param.type) {
+                return commandError(ctx, "Config parameter $paramName only accepts values of type ${param.type} as input, you provided ${newValue::class.simpleName}")
             }
 
-            var prevValue = getConfig(p, param)
+            var prevValue = p.getConfig(param)
             if (prevValue is Byte) {
                 prevValue = toBoolean(prevValue)
             }
 
             if(prevValue == newValue) {
-                return commandError(ctx, "Nothing changed. The value of $param was already $prevValue")
+                return commandError(ctx, "Nothing changed. The value of $paramName was already $prevValue")
             }
 
-            setConfig(p, param, newValue)
+            p.setConfig(param, newValue)
             createAndLoadCustomData(p)
 
-            p.sendMessage(Text.literal("Property %c1{$param} successfully changed (%c2{$prevValue} -> %c3{$newValue})")
+            p.sendMessage(Text.literal("Property %c1{$paramName} successfully changed (%c2{$prevValue} -> %c3{$newValue})")
                 .multiColored(listOf(Color.WHITE, getColor(prevValue), getColor(newValue)), Color.CYAN))
             return 1
 
-        } catch (e: ConfigUtils.ConfigUnknownParamException) {
-            return commandError(ctx, "Unknown property.")
         } catch (e: RuntimeException) {
           return commandError(ctx, e.message!!)
         } catch (e: Exception) {
