@@ -64,74 +64,80 @@ class ConfigureProperty {
     private fun run(param: String, value: String, onlyProp: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
 
         val p = ctx.source.playerOrThrow
-        var convertedValue: Any
         try {
             val requiredType = ConfigUtils.ConfigProperties.valueOf(param.uppercase()).type
             if(requiredType !in ConfigUtils.configurableTypes) {
                 return commandError(ctx, "This parameter can't be configured, as it doesn't store a primitive value")
             }
 
-            if(onlyProp) {
+            val newValue = if(onlyProp) {
                 try {
-                    convertedValue = !toBoolean(getConfig(p, param) as Byte)
+                    !toBoolean(getConfig(p, param) as Byte)
                 } catch (e: ClassCastException) {
-                    return commandError(ctx, "Provide a new value for the property.")
+                    throw RuntimeException("Provide a new value for the property.")
                 }
             } else {
-                convertedValue = try {
-                    // Int?
-                    parseInt(value)
-                } catch (e: NumberFormatException) {
-                    try {
-                        // Boolean?
-                        when(value) {
-                            "true" -> true
-                            "false" -> false
-                            else -> throw ClassCastException()
-                        }
-                    } catch (e: ClassCastException) {
-                        value
-                    }
-                }
+                convertValue(value)
+            }
 
-                if(convertedValue::class.simpleName != requiredType) {
-                    return commandError(ctx, "Config parameter $param only accepts values of type $requiredType as input, you provided ${convertedValue::class.simpleName}")
-                }
+            if(newValue::class.simpleName != requiredType) {
+                return commandError(ctx, "Config parameter $param only accepts values of type $requiredType as input, you provided ${newValue::class.simpleName}")
             }
 
             var prevValue = getConfig(p, param)
-
-            setConfig(p, param, convertedValue)
-            createAndLoadCustomData(p)
-
-            // purely decorative segments
-            var prevValueColor = Color.WHITE
-
             if (prevValue is Byte) {
                 prevValue = toBoolean(prevValue)
-                prevValueColor = if(prevValue) Color.GREEN else Color.RED
             }
 
-            val convertedValueColor = when(convertedValue) {
-                is Boolean -> when(convertedValue) {
-                    true -> Color.GREEN
-                    else -> Color.RED
-                }
-                else -> Color.WHITE
+            if(prevValue == newValue) {
+                return commandError(ctx, "Nothing changed. The value of $param was already $prevValue")
             }
 
-            Utils.debug(prevValue, "prev value")
-            Utils.debug(convertedValue, "new value")
+            setConfig(p, param, newValue)
+            createAndLoadCustomData(p)
 
-            p.sendMessage(Text.literal("Property %c1{$param} successfully changed (%c2{$prevValue} -> %c3{$convertedValue})")
-                .multiColored(listOf(Color.WHITE, prevValueColor, convertedValueColor), Color.CYAN))
+            p.sendMessage(Text.literal("Property %c1{$param} successfully changed (%c2{$prevValue} -> %c3{$newValue})")
+                .multiColored(listOf(Color.WHITE, getColor(prevValue), getColor(newValue)), Color.CYAN))
             return 1
 
         } catch (e: ConfigUtils.ConfigUnknownParamException) {
             return commandError(ctx, "Unknown property.")
+        } catch (e: RuntimeException) {
+          return commandError(ctx, e.message!!)
         } catch (e: Exception) {
             e.printStackTrace()
             return 0
+        }
+    }
+
+    /**
+     * Generates text color for the value. White by default, red if the value is false and green if true. Purely decorative
+     */
+    private fun getColor(value: Any): Color {
+        return when(value) {
+            is Boolean -> when(value) {
+                true -> Color.GREEN
+                else -> Color.RED
+            }
+            else -> Color.WHITE
+        }
+    }
+
+    private fun convertValue(value: String): Any {
+        return try {
+            // Int?
+            parseInt(value)
+        } catch (e: NumberFormatException) {
+            try {
+                // Boolean?
+                when(value) {
+                    "true" -> true
+                    "false" -> false
+                    else -> throw ClassCastException()
+                }
+            } catch (e: ClassCastException) {
+                value
+            }
         }
     }
 }

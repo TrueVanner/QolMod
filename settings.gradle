@@ -1,0 +1,13 @@
+pluginManagement {
+
+	rootProject.name = archives_base_name + "-" + minecraft_version
+
+	repositories {
+		maven {
+			name = 'Fabric'
+			url = 'https://maven.fabricmc.net/'
+		}
+		mavenCentral()
+		gradlePluginPortal()
+	}
+}

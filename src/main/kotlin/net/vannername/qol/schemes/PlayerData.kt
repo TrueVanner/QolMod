@@ -16,13 +16,5 @@ class PlayerData(
     val actionbarCoordsColors: PlayerActionbarCoordsColors = PlayerActionbarCoordsColors(),
 ) {
 
-    fun displayActionbarCoords(p: ServerPlayerEntity) {
-        if(sendActionbarCoords) {
-            val intLoc = Utils.getIntegerLocation(p)
-
-            p.sendMessage(Text.literal("%c1{X}: %c2{${intLoc[0]}} %c1{Y}: %c2{${intLoc[1]}} %c1{Z}: %c2{${intLoc[2]}}").multiColored(
-                listOf(actionbarCoordsColors.text, actionbarCoordsColors.coords)), true)
-        }
-    }
 }
 
