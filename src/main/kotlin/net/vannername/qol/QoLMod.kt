@@ -29,8 +29,6 @@ object QoLMod : ModInitializer {
 //		Testing()
 		MainGUI()
 
-
-
 		ServerTickEvents.END_WORLD_TICK.register { world ->
 			for(p in world.players) {
 				p.displayActionbarCoords()

@@ -39,11 +39,11 @@ class Testing {
     private fun run(context: CommandContext<ServerCommandSource>): Int {
         val p = context.source.playerOrThrow
 
-        try {
-            p.sendMessage(Text.literal("%{This} is a %1{test} message").multiColored(listOf(Color.RED)))
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+//        try {
+//            p.sendMessage(Text.literal("%{This} is a %1{test} message").multiColored(listOf(Color.RED)))
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//        }
 
 //        p.sendMessage(Text.literal("test"), true)
 

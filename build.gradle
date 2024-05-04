@@ -48,11 +48,10 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 	modImplementation "eu.pb4:player-data-api:[${project.player_data_api_version}]"
 	modImplementation "eu.pb4:sgui:[${project.server_gui_version}]"
-	implementation 'org.objenesis:objenesis:1.2'
 
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+	implementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+	implementation "org.assertj:assertj-core:3.25.1"
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-	testImplementation "org.assertj:assertj-core:3.25.1"
 
 //	modImplementation "maven.modrinth:midnightlib:${project.midnightlib_version}"
 }

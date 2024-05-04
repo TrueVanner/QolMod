@@ -13,53 +13,87 @@ import net.vannername.qol.schemes.PlayerData
 import net.vannername.qol.schemes.PlayerNavigationData
 import net.vannername.qol.utils.ConfigUtils.ConfigProperty.*
 import net.vannername.qol.utils.Utils.setPlayerData
-import java.awt.Color
+import kotlin.reflect.KClass
 
 object ConfigUtils {
 
-    val boolean: String = Boolean::class.simpleName!!
-    val string: String = String::class.simpleName!!
-    val int: String = Int::class.simpleName!!
+    val bool = Boolean::class
+    val string = String::class
+    val int = Int::class
+    val double = Double::class
+    val color = Utils.Colors::class
 
-    enum class ConfigProperty(val text: String, val type: String) {
-        SEND_DEATH_COORDS("send_death_coords", boolean),
-        SEND_ACTIONBAR_COORDS("send_actionbar_coords", boolean),
-        IS_NAVIGATING("is_navigating", boolean),
-        IS_AFK("is_afk", boolean),
-        IS_SITTING("is_sitting", boolean),
+    class ConfigBadTypeException(prop: ConfigProperty, usedType: KClass<*>) :
+        Exception("Property ${prop.text} stored values of type ${prop.type}, but $usedType was specified")
+
+    enum class ConfigProperty(val text: String, val type: KClass<*>) {
+        SEND_DEATH_COORDS("send_death_coords", bool),
+        SEND_ACTIONBAR_COORDS("send_actionbar_coords", bool),
+        IS_NAVIGATING("is_navigating", bool),
+        IS_AFK("is_afk", bool),
+        IS_SITTING("is_sitting", bool),
         NAV_X("nav_x", int),
         NAV_Y("nav_y", int),
         NAV_Z("nav_z", int),
         NAV_WORLD("nav_world", string),
-        NAV_IS_DIRECT("nav_is_direct", boolean),
-        ACTIONBAR_COORDS_COLOR_TEXT("actionbar_coords_color_text", int),
-        ACTIONBAR_COORDS_COLOR_COORDS("actionbar_coords_color_coords", int),
+        NAV_IS_DIRECT("nav_is_direct", bool),
+        ACTIONBAR_COORDS_COLOR_TEXT("actionbar_coords_color_text", color),
+        ACTIONBAR_COORDS_COLOR_COORDS("actionbar_coords_color_coords", color);
         // ...
+
+        companion object {
+            fun typeOf(value: String): KClass<*> {
+                return ConfigProperty.valueOf(value.uppercase()).type
+            }
+        }
     }
+
     // list of all params that can be changed by the player using /setproperty
-    val configurableParams = ConfigProperty.entries.filter { elem -> elem.type in listOf(boolean, string, int) }
+    val configurableProps = ConfigProperty.entries.filter { elem -> elem.type in listOf(bool, int, string, color) }
 
-    val propertyNames = ConfigProperty.entries.map { elem -> elem.text }
-
+    // to get property without type
+    @Deprecated("Replaced by a more advanced getConfig()")
     @JvmStatic
-    fun ServerPlayerEntity.getConfig(param: ConfigProperty): Any {
-        return when (val elem = PlayerDataApi.getGlobalDataFor(this, Identifier("qolmod:${param.text}"))) {
+    fun ServerPlayerEntity.getConfig(prop: ConfigProperty): Any {
+        return when (val elem = PlayerDataApi.getGlobalDataFor(this, Identifier("qolmod:${prop.text}"))) {
             is NbtByte -> elem.byteValue()
             is NbtInt -> elem.intValue()
             else -> elem.toString()
         }
     }
 
+    // to get property with type
     @JvmStatic
-    fun ServerPlayerEntity.setConfig(param: ConfigProperty, value: Any) {
+    fun <T : Any> ServerPlayerEntity.getConfig(prop: ConfigProperty, expectedType: KClass<T>): T {
+        try {
+            val result = when (val elem = PlayerDataApi.getGlobalDataFor(this, Identifier("qolmod:${prop.text}"))) {
+                is NbtByte -> if(expectedType == Boolean::class) toBoolean(elem.byteValue()) else elem.byteValue()
+                is NbtInt -> elem.intValue()
+                is NbtString -> when(prop.type) {
+                    Utils.Colors::class -> Utils.Colors.valueOf(elem.asString())
+                    else -> elem.asString()
+                }
+                else -> elem.toString()
+            } as T
+            return result
+        } catch(e: ClassCastException) {
+            throw ConfigBadTypeException(prop, expectedType)
+        }
+    }
+
+    @JvmStatic
+    fun ServerPlayerEntity.setConfig(prop: ConfigProperty, value: Any) {
+        if(value::class != prop.type) {
+            throw ConfigBadTypeException(prop, value::class)
+        }
         val nbtElem: NbtElement = when (value) {
             is Boolean -> NbtByte.of(value)
             is Int -> NbtInt.of(value)
             else -> NbtString.of(value.toString())
         }
 
-        PlayerDataApi.setGlobalDataFor(this, Identifier("qolmod:${param.text}"), nbtElem)
-        Utils.debug("${param.text} is set to $value resulting in $nbtElem")
+        PlayerDataApi.setGlobalDataFor(this, Identifier("qolmod:${prop.text}"), nbtElem)
+        Utils.debug("${prop.text} is set to $value resulting in $nbtElem")
     }
 
     @JvmStatic
@@ -70,23 +104,23 @@ object ConfigUtils {
     @Throws(Exception::class)
     fun createAndLoadCustomData(p: ServerPlayerEntity) {
         val data = PlayerData(
-            toBoolean(p.getConfig(SEND_DEATH_COORDS) as Byte),
-            toBoolean(p.getConfig(SEND_ACTIONBAR_COORDS) as Byte),
-            toBoolean(p.getConfig(IS_AFK) as Byte),
-            toBoolean(p.getConfig(IS_SITTING) as Byte),
+            p.getConfig(SEND_DEATH_COORDS, bool),
+            p.getConfig(SEND_ACTIONBAR_COORDS, bool),
+            p.getConfig(IS_AFK, bool),
+            p.getConfig(IS_SITTING, bool),
             PlayerNavigationData(
-                toBoolean(p.getConfig(IS_NAVIGATING) as Byte),
+                p.getConfig(IS_NAVIGATING, bool),
                 Location(
-                    p.getConfig(NAV_X) as Int,
-                    p.getConfig(NAV_Y) as Int,
-                    p.getConfig(NAV_Z) as Int,
-                    p.getConfig(NAV_WORLD) as String
+                    p.getConfig(NAV_X, int),
+                    p.getConfig(NAV_Y, int),
+                    p.getConfig(NAV_Z, int),
+                    p.getConfig(NAV_WORLD, string)
                 ),
-                toBoolean(p.getConfig(NAV_IS_DIRECT) as Byte),
+                p.getConfig(NAV_IS_DIRECT, bool)
             ),
             PlayerActionbarCoordsColors(
-                p.getConfig(ACTIONBAR_COORDS_COLOR_TEXT) as Int,
-                p.getConfig(ACTIONBAR_COORDS_COLOR_COORDS) as Int
+                p.getConfig(ACTIONBAR_COORDS_COLOR_TEXT, color),
+                p.getConfig(ACTIONBAR_COORDS_COLOR_COORDS, color)
             ),
             //...
         )
@@ -105,7 +139,7 @@ object ConfigUtils {
             QoLMod.logger.info("Config was not set up for player ${p.name.string}, not anymore")
             // TODO: some message informing the player about their defaults
 
-            setDefaultPlayerValues(p)
+            setDefaultConfig(p)
             p.setPlayerData(PlayerData())
         }
     }
@@ -124,7 +158,6 @@ object ConfigUtils {
         p.setConfig(NAV_IS_DIRECT, data.navData.isDirect)
         p.setConfig(ACTIONBAR_COORDS_COLOR_TEXT, data.actionbarCoordsColors.text)
         p.setConfig(ACTIONBAR_COORDS_COLOR_COORDS, data.actionbarCoordsColors.coords)
-        p.setConfig(ACTIONBAR_COORDS_COLOR_COORDS, data.actionbarCoordsColors.coords)
         // ...
     }
 
@@ -139,12 +172,12 @@ object ConfigUtils {
         NAV_Z to 0,
         NAV_WORLD to "overworld",
         NAV_IS_DIRECT to false,
-        ACTIONBAR_COORDS_COLOR_TEXT to Color.YELLOW.rgb,
-        ACTIONBAR_COORDS_COLOR_COORDS to Color.GREEN.rgb,
+        ACTIONBAR_COORDS_COLOR_TEXT to Utils.Colors.YELLOW,
+        ACTIONBAR_COORDS_COLOR_COORDS to Utils.Colors.GREEN,
     )
 
     @JvmStatic
-    fun setDefaultPlayerValues(p: ServerPlayerEntity) {
+    fun setDefaultConfig(p: ServerPlayerEntity) {
         for(pair in defaultPlayerConfig) {
             p.setConfig(pair.key, pair.value)
         }

@@ -14,15 +14,16 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.vannername.qol.utils.ConfigUtils
-import net.vannername.qol.utils.ConfigUtils.configurableParams
+import net.vannername.qol.utils.ConfigUtils.bool
+import net.vannername.qol.utils.ConfigUtils.color
+import net.vannername.qol.utils.ConfigUtils.configurableProps
 import net.vannername.qol.utils.ConfigUtils.createAndLoadCustomData
 import net.vannername.qol.utils.ConfigUtils.getConfig
-import net.vannername.qol.utils.ConfigUtils.propertyNames
+import net.vannername.qol.utils.ConfigUtils.int
 import net.vannername.qol.utils.ConfigUtils.setConfig
-import net.vannername.qol.utils.ConfigUtils.toBoolean
+import net.vannername.qol.utils.Utils
 import net.vannername.qol.utils.Utils.commandError
 import net.vannername.qol.utils.Utils.multiColored
-import java.awt.Color
 import java.lang.Integer.parseInt
 
 class ConfigureProperty {
@@ -37,7 +38,7 @@ class ConfigureProperty {
                             SuggestionProviders.register(Identifier("all_config_properties"))
                             { _: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
                                 CommandSource.suggestMatching(
-                                    propertyNames.stream(),
+                                    configurableProps.map { prop -> prop.text },
                                     builder
                                 )
                             }
@@ -49,6 +50,21 @@ class ConfigureProperty {
                             )
                         }
                         .then(argument("value", string())
+                            .suggests(
+                                SuggestionProviders.register(Identifier("potential_values"))
+                                { ctx: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
+                                    val possibleValuesList: List<String> = when(ConfigUtils.ConfigProperty.typeOf(getString(ctx, "property"))) {
+                                        bool -> listOf("true", "false")
+                                        int -> listOf("0")
+                                        color -> Utils.Colors.entries.map { entry -> entry.toString() }
+                                        else -> emptyList()
+                                    }
+                                    CommandSource.suggestMatching(
+                                        possibleValuesList.stream(),
+                                        builder
+                                    )
+                                }
+                            )
                             .executes { ctx ->
                                 run(
                                     getString(ctx,"property"), getString(ctx, "value"), false, ctx
@@ -61,16 +77,16 @@ class ConfigureProperty {
     }
 
     @Throws(CommandSyntaxException::class)
-    private fun run(paramName: String, value: String, onlyProp: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
-        val param: ConfigUtils.ConfigProperty
+    private fun run(propName: String, value: String, onlyProp: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
+        val prop: ConfigUtils.ConfigProperty
 
         try {
-            param = ConfigUtils.ConfigProperty.valueOf(paramName.uppercase())
-            if(param !in configurableParams) {
-                return commandError(ctx, "This parameter can't be configured, as it doesn't store a primitive value")
+            prop = ConfigUtils.ConfigProperty.valueOf(propName.uppercase())
+            if(prop !in configurableProps) {
+                return commandError(ctx, "This property cannot be configured via commands.")
             }
         } catch (e: IllegalArgumentException) {
-            return commandError(ctx, "This parameter can't be configured, as it doesn't exist")
+            return commandError(ctx, "This property doesn't exist.")
         }
 
         val p = ctx.source.playerOrThrow
@@ -78,32 +94,29 @@ class ConfigureProperty {
         try {
             val newValue = if(onlyProp) {
                 try {
-                    !toBoolean(p.getConfig(param) as Byte)
-                } catch (e: ClassCastException) {
+                    !p.getConfig(prop, Boolean::class)
+                } catch (e: ConfigUtils.ConfigBadTypeException) {
                     throw RuntimeException("Provide a new value for the property.")
                 }
             } else {
-                convertValue(value)
+                toTrueType(value)
             }
 
-            if(newValue::class.simpleName != param.type) {
-                return commandError(ctx, "Config parameter $paramName only accepts values of type ${param.type} as input, you provided ${newValue::class.simpleName}")
+            if(newValue::class.simpleName != prop.type.simpleName) {
+                return commandError(ctx, "Config parameter $propName only accepts values of type ${prop.type.simpleName} as input, you provided ${newValue::class.simpleName}")
             }
 
-            var prevValue = p.getConfig(param)
-            if (prevValue is Byte) {
-                prevValue = toBoolean(prevValue)
-            }
+            val prevValue = p.getConfig(prop, prop.type)
 
             if(prevValue == newValue) {
-                return commandError(ctx, "Nothing changed. The value of $paramName was already $prevValue")
+                return commandError(ctx, "Nothing changed. The value of $propName was already $prevValue")
             }
 
-            p.setConfig(param, newValue)
+            p.setConfig(prop, newValue)
             createAndLoadCustomData(p)
 
-            p.sendMessage(Text.literal("Property %c1{$paramName} successfully changed (%c2{$prevValue} -> %c3{$newValue})")
-                .multiColored(listOf(Color.WHITE, getColor(prevValue), getColor(newValue)), Color.CYAN))
+            p.sendMessage(Text.literal("Property %c1{$propName} successfully changed (%c2{$prevValue} -> %c3{$newValue})")
+                .multiColored(listOf(Utils.Colors.WHITE, getColor(prevValue), getColor(newValue)), Utils.Colors.CYAN))
             return 1
 
         } catch (e: RuntimeException) {
@@ -117,17 +130,22 @@ class ConfigureProperty {
     /**
      * Generates text color for the value. White by default, red if the value is false and green if true. Purely decorative
      */
-    private fun getColor(value: Any): Color {
+    private fun getColor(value: Any): Utils.Colors {
         return when(value) {
             is Boolean -> when(value) {
-                true -> Color.GREEN
-                else -> Color.RED
+                true -> Utils.Colors.GREEN
+                else -> Utils.Colors.RED
             }
-            else -> Color.WHITE
+            is Utils.Colors -> value
+            else -> Utils.Colors.WHITE
         }
     }
+//
+//    private fun <T> convertTo(toConvert: String, type: T): T {
+//        return toConvert as T
+//    }
 
-    private fun convertValue(value: String): Any {
+    private fun toTrueType(value: String): Any {
         return try {
             // Int?
             parseInt(value)
@@ -140,7 +158,12 @@ class ConfigureProperty {
                     else -> throw ClassCastException()
                 }
             } catch (e: ClassCastException) {
-                value
+                try {
+                    // Color?
+                    Utils.Colors.valueOf(value)
+                } catch(e: IllegalArgumentException) {
+                    value
+                }
             }
         }
     }

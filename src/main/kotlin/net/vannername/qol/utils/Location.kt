@@ -9,15 +9,16 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 class Location(
-    val x: Double, val y: Double, val z: Double, val worldName: String
+    val x: Int, val y: Int, val z: Int, val worldName: String
 )
 {
-    constructor(x: Int, y: Int, z: Int, worldName: String) : this(x.toDouble(), y.toDouble(), z.toDouble(), worldName)
+    constructor(x: Double, y: Double, z: Double, worldName: String) : this(x.toInt(), y.toInt(), z.toInt(), worldName)
+
     fun getWorld(server: MinecraftServer): ServerWorld {
         return server.getWorld(RegistryKey.of(RegistryKeys.WORLD, Identifier(worldName)))!!
     }
 
     fun getDistance(l: Location): Double {
-        return sqrt((x - l.x).pow(2) + (y - l.y).pow(2) + (z - l.z).pow(2))
+        return sqrt((x - l.x).toDouble().pow(2) + (y - l.y).toDouble().pow(2) + (z - l.z).toDouble().pow(2))
     }
 }

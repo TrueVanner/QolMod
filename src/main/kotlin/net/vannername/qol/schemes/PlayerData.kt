@@ -10,8 +10,8 @@ class PlayerData(
     var sendActionbarCoords: Boolean = defaultPlayerConfig[SEND_ACTIONBAR_COORDS] as Boolean,
     var isAFK: Boolean = defaultPlayerConfig[IS_AFK] as Boolean,
     var isSitting: Boolean = defaultPlayerConfig[IS_SITTING] as Boolean,
-    val navData: PlayerNavigationData = PlayerNavigationData(),
-    val actionbarCoordsColors: PlayerActionbarCoordsColors = PlayerActionbarCoordsColors(),
+    var navData: PlayerNavigationData = PlayerNavigationData(),
+    var actionbarCoordsColors: PlayerActionbarCoordsColors = PlayerActionbarCoordsColors(),
 ) {
 
 }

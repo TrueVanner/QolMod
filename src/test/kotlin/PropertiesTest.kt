@@ -8,13 +8,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.objenesis.Objenesis
-import org.objenesis.ObjenesisStd
 
 class PropertiesTest {
     @Test
     fun `All default properties defined`() {
         assertThat(PlayerData()).hasNoNullFieldsOrProperties()
-        assertThat(ConfigUtils.defaultPlayerConfig.keys.map { key -> key.text }).containsExactlyInAnyOrderElementsOf(ConfigUtils.propertyNames)
+        assertThat(ConfigUtils.defaultPlayerConfig.keys).containsExactlyInAnyOrderElementsOf(ConfigUtils.ConfigProperty.entries)
     }
 }

@@ -97,12 +97,22 @@ object Utils {
 
 
     @JvmStatic
-    fun MutableText.multiColored(colors: List<Color>, globalColor: Color = Color.WHITE): MutableText {
-        return this.multiColored(colors.map { color -> color.rgb }, globalColor.rgb)
+    fun MutableText.multiColored(colors: List<Colors>, globalColor: Colors = Colors.WHITE): MutableText {
+        return this.multiColored(colors.map { color -> color.c.rgb }, globalColor.c.rgb)
     }
 
     @JvmStatic
     fun debug(value: Any, name: String? = null) {
        println(if(name != null) "$name: $value" else value)
+    }
+
+    // MY collection of the most popular colors.
+    enum class Colors(val c: Color) {
+        WHITE(Color.WHITE),
+        RED(Color.RED),
+        GREEN(Color.GREEN),
+        BLUE(Color.BLUE),
+        YELLOW(Color.YELLOW),
+        CYAN(Color.CYAN),
     }
 }
