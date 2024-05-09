@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType.getString
 import com.mojang.brigadier.arguments.StringArgumentType.string
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
+import com.mojang.brigadier.suggestion.SuggestionProvider
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.command.CommandSource
@@ -28,51 +29,56 @@ import java.lang.Integer.parseInt
 
 class ConfigureProperty {
     init {
+        val suggestProperty: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("all_config_properties"))
+            { _: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
+                CommandSource.suggestMatching(
+                    configurableProps.map { prop -> prop.text },
+                    builder
+                )
+            }
+
+        val suggestValue: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("potential_values"))
+            { ctx: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
+                val possibleValuesList: List<String> = when(ConfigUtils.ConfigProperty.typeOf(getString(ctx, "property"))) {
+                    bool -> listOf("true", "false")
+                    int -> listOf("0")
+                    color -> Utils.Colors.entries.map { entry -> entry.toString() }
+                    else -> emptyList()
+                }
+                CommandSource.suggestMatching(
+                    possibleValuesList.stream(),
+                    builder
+                )
+            }
+
+        val command = CommandManager
+            .literal("setproperty")
+            .build()
+
+        val propertyNode = CommandManager
+            .argument("property", string())
+            .suggests(suggestProperty)
+            .executes { ctx ->
+                run(
+                    getString(ctx, "property"), "", true, ctx
+                )
+            }
+            .build()
+
+        val valueNode = CommandManager
+            .argument("value", string())
+            .suggests(suggestValue)
+            .executes { ctx ->
+                run(
+                    getString(ctx,"property"), getString(ctx, "value"), false, ctx
+                )
+            }
+            .build()
 
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
-            dispatcher.register(
-                CommandManager.literal("setproperty")
-                    .then(argument("property", string())
-                        .suggests(
-
-                            SuggestionProviders.register(Identifier("all_config_properties"))
-                            { _: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
-                                CommandSource.suggestMatching(
-                                    configurableProps.map { prop -> prop.text },
-                                    builder
-                                )
-                            }
-
-                        )
-                        .executes { ctx ->
-                            run(
-                                getString(ctx, "property"), "", true, ctx
-                            )
-                        }
-                        .then(argument("value", string())
-                            .suggests(
-                                SuggestionProviders.register(Identifier("potential_values"))
-                                { ctx: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
-                                    val possibleValuesList: List<String> = when(ConfigUtils.ConfigProperty.typeOf(getString(ctx, "property"))) {
-                                        bool -> listOf("true", "false")
-                                        int -> listOf("0")
-                                        color -> Utils.Colors.entries.map { entry -> entry.toString() }
-                                        else -> emptyList()
-                                    }
-                                    CommandSource.suggestMatching(
-                                        possibleValuesList.stream(),
-                                        builder
-                                    )
-                                }
-                            )
-                            .executes { ctx ->
-                                run(
-                                    getString(ctx,"property"), getString(ctx, "value"), false, ctx
-                                )
-                            }
-                        )
-                    )
-            )
+            dispatcher.root.addChild(command)
+            command.addChild(propertyNode)
+            propertyNode.addChild(valueNode)
         }
     }
 

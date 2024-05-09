@@ -28,9 +28,19 @@ repositories {
 		url = 'https://maven.ladysnake.org/releases'
 	}
 
+//	maven { url "https://mvnrepository.com/artifact/org.objenesis/objenesis" }
+
 	maven {
-		url = "https://mvnrepository.com/artifact/org.objenesis/objenesis"
+		name = 'Ladysnake Mods'
+		url = 'https://maven.ladysnake.org/releases'
+		content {
+			includeGroup 'io.github.ladysnake'
+			includeGroup 'org.ladysnake'
+			includeGroupByRegex 'dev\\.onyxstudios.*'
+		}
 	}
+
+	maven { url "https://jitpack.io"  }
 }
 
 fabricApi {
@@ -48,10 +58,12 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 	modImplementation "eu.pb4:player-data-api:[${project.player_data_api_version}]"
 	modImplementation "eu.pb4:sgui:[${project.server_gui_version}]"
+	modImplementation('com.github.0x3C50:Renderer:master-SNAPSHOT')
 
 	implementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
 	implementation "org.assertj:assertj-core:3.25.1"
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
 
 //	modImplementation "maven.modrinth:midnightlib:${project.midnightlib_version}"
 }
