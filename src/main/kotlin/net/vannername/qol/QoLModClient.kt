@@ -1,14 +1,12 @@
 package net.vannername.qol
 
+import com.mojang.blaze3d.systems.RenderSystem
 import me.x150.renderer.event.RenderEvents
 import me.x150.renderer.render.Renderer2d
 import net.fabricmc.api.ClientModInitializer
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.render.BufferRenderer
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.Tessellator
-import net.minecraft.client.render.VertexConsumerProvider
+import net.minecraft.client.render.*
 import net.minecraft.client.render.model.json.ModelTransformationMode
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.component.DataComponentTypes
@@ -18,6 +16,7 @@ import net.minecraft.item.Items
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.GlobalPos
+import org.lwjgl.BufferUtils
 import java.util.*
 
 object QoLModClient : ClientModInitializer {
@@ -56,13 +55,13 @@ object QoLModClient : ClientModInitializer {
 		try {
 			val tessellator = Tessellator.getInstance()
 			val builder = tessellator.buffer
-			client.itemRenderer.renderItem(compass, ModelTransformationMode.GROUND, 0xF000F0, OverlayTexture.DEFAULT_UV, matrixStack, VertexConsumerProvider.immediate(builder), null, 0)
-			BufferRenderer.draw(builder.end())
-
+//			client.itemRenderer.renderItem(compass, ModelTransformationMode.GROUND, 0xF000F0, OverlayTexture.DEFAULT_UV, matrixStack, VertexConsumerProvider.immediate(builder), null, 0)
+			client.itemRenderer.renderItem(ItemStack(Items.DIRT), ModelTransformationMode.GROUND, 0xF000F0, OverlayTexture.DEFAULT_UV, matrixStack, VertexConsumerProvider.immediate(builder), null, 0)
+			RenderSystem.setShader { GameRenderer.getPositionTexProgram() }
+			tessellator.draw()
 		} catch (e: Exception) {
 			println("fuckup")
 		}
-//		buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE)
 
 
 //		for(quad in MinecraftClient.getInstance().itemRenderer.getModel(compass, null, null, 0).getQuads(null, null, Random.create())) {
