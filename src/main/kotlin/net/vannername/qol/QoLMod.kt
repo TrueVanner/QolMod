@@ -62,7 +62,7 @@ object QoLMod : ModInitializer {
 //		MidnightConfig.init(MOD_ID, MidnightConfigExample::class.java)
 		EnderChestOpener()
 		ConfigureProperty()
-//		Testing()
+		Testing()
 		MainGUI()
 
 		ServerTickEvents.END_WORLD_TICK.register { world ->

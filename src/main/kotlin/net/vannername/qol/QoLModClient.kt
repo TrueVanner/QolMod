@@ -3,20 +3,26 @@ package net.vannername.qol
 import me.x150.renderer.event.RenderEvents
 import me.x150.renderer.render.Renderer2d
 import net.fabricmc.api.ClientModInitializer
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.item.CompassAnglePredicateProvider
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.client.session.telemetry.WorldLoadedEvent
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.LodestoneTrackerComponent
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.GlobalPos
+import java.util.*
 
 object QoLModClient : ClientModInitializer {
 
 	override fun onInitializeClient() {
 		val angleProvider = CompassAnglePredicateProvider { world, _, _ -> GlobalPos(world.registryKey, BlockPos(0, 50, 0)) }
+
 		RenderEvents.HUD.register { matrices ->
 			renderCompass(matrices.matrices, angleProvider, MinecraftClient.getInstance().player!!)
 		}
@@ -67,11 +73,6 @@ object QoLModClient : ClientModInitializer {
 
 		Renderer2d.renderTexture(matrixStack, Identifier("textures/item/compass_${textureID}.png"), 100.0, 100.0, 16.0, 16.0)
 
-
-
-//		val client = MinecraftClient.getInstance()
-//		val compass = ItemStack(Items.COMPASS)
-//		compass.set(DataComponentTypes.LODESTONE_TRACKER, LodestoneTrackerComponent(Optional.of(GlobalPos.create(p.world.registryKey, BlockPos(0, 50, 0))), true))
 //		client.textureManager.getTexture(Identifier("item", "compass.json"))
 //		client.textureManager.getTexture(Identifier("compass_00"))
 
