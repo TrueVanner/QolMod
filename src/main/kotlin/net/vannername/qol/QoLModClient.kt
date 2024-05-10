@@ -31,24 +31,13 @@ object QoLModClient : ClientModInitializer {
 
 			val client = MinecraftClient.getInstance()
 			val compass = ItemStack(Items.COMPASS)
-			client.textureManager.getTexture(Identifier("renderer", "icon.png"))
-			println(client.textureManager.getTexture(Identifier("compass_00")))
+//			client.textureManager.getTexture()
+//			println(client.textureManager.getTexture(Identifier("compass_00")))
 		}
 
 		RenderEvents.HUD.register { matrices ->
-
+			renderCompass(matrices.matrices, MinecraftClient.getInstance().player!!)
 		}
-
-//		RenderEvents.HUD.register { matrices ->
-////			RendererUtils.registerBufferedImageTexture(Identifier("nav_compass"), ImageIO.read(File("C:/Users/the_best/Documents/BlockBench Models/nav compass/compass_00.png")))
-//
-//			renderCompass(matrices.matrices, MinecraftClient.getInstance().player!!)
-//		//			ClientTickEvents.END_WORLD_TICK.register { world ->
-////				for(p in world.players) {
-////
-////				}
-////			}
-//		}
 
 	}
 
@@ -57,7 +46,7 @@ object QoLModClient : ClientModInitializer {
 //			RenderSystem.setShaderTexture(0, Identifier("minecraft:item/compass_00"))
 //		Renderer2d.renderTexture(matrixStack, Identifier("nav_compass"), 100.0, 100.0, 16.0, 16.0)
 
-		Renderer2d.renderTexture(matrixStack, Identifier("compass"), 100.0, 100.0, 16.0, 16.0)
+		Renderer2d.renderTexture(matrixStack, Identifier("textures/item/compass_00.png"), 100.0, 100.0, 16.0, 16.0)
 
 //		p.sendMessage(Text.literal(CompassAnglePredicateProvider { world, stack, entity -> GlobalPos(world.registryKey, BlockPos(0, 50, 0)) }
 //			.unclampedCall(
@@ -65,11 +54,11 @@ object QoLModClient : ClientModInitializer {
 //			).toString()))
 
 
-		val client = MinecraftClient.getInstance()
-		val compass = ItemStack(Items.COMPASS)
-		compass.set(DataComponentTypes.LODESTONE_TRACKER, LodestoneTrackerComponent(Optional.of(GlobalPos.create(p.world.registryKey, BlockPos(0, 50, 0))), true))
-		client.textureManager.getTexture(Identifier("item", "compass.json"))
-		client.textureManager.getTexture(Identifier("compass_00"))
+//		val client = MinecraftClient.getInstance()
+//		val compass = ItemStack(Items.COMPASS)
+//		compass.set(DataComponentTypes.LODESTONE_TRACKER, LodestoneTrackerComponent(Optional.of(GlobalPos.create(p.world.registryKey, BlockPos(0, 50, 0))), true))
+//		client.textureManager.getTexture(Identifier("item", "compass.json"))
+//		client.textureManager.getTexture(Identifier("compass_00"))
 
 	//		println(compass.registryEntry.key)
 //		try {
