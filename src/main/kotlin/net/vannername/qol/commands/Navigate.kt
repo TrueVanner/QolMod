@@ -31,13 +31,21 @@ import net.vannername.qol.utils.Utils
 
 class Navigate {
     init {
-        val suggestCoords: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("suggestCoords"))
-        { _: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
-            CommandSource.suggestMatching(
-                listOf("~ ~ ~", "0 0 0").stream(),
-                builder
-            )
+        val suggestCoord = { values: List<String> ->
+                { _: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
+                CommandSource.suggestMatching(
+                    values.stream(),
+                    builder
+                )
+            }
         }
+
+        val suggestX: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("qol_mod", "suggest_x"),
+            suggestCoord(listOf("~", "0")))
+        val suggestY: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("qol_mod", "suggest_y"),
+            suggestCoord(listOf("~", "0")))
+        val suggestZ: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("qol_mod", "suggest_z"),
+            suggestCoord(listOf("~", "0")))
 
         val commandNode = CommandManager
             .literal("navigate")
@@ -45,17 +53,17 @@ class Navigate {
 
         val xNode = CommandManager
             .argument("x", IntegerArgumentType.integer())
-            .suggests(suggestCoords)
+            .suggests(suggestX)
             .build()
 
         val yNode = CommandManager
             .argument("y", IntegerArgumentType.integer())
-            .suggests(suggestCoords)
+            .suggests(suggestY)
             .build()
 
         val zNode = CommandManager
             .argument("z", IntegerArgumentType.integer())
-            .suggests(suggestCoords)
+            .suggests(suggestZ)
             .executes { ctx ->
                 run(
                     getInteger(ctx, "x"), getInteger(ctx, "y"), getInteger(ctx, "z"), false, ctx

@@ -28,7 +28,7 @@ import java.lang.Integer.parseInt
 
 class ConfigureProperty {
     init {
-        val suggestProperty: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("all_config_properties"))
+        val suggestProperty: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("qol_mod", "all_config_properties"))
             { _: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
                 CommandSource.suggestMatching(
                     configurableProps.map { prop -> prop.text },
@@ -36,7 +36,7 @@ class ConfigureProperty {
                 )
             }
 
-        val suggestValue: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("potential_values"))
+        val suggestValue: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("qol_mod", "potential_config_values"))
             { ctx: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
                 val possibleValuesList: List<String> = when(ConfigUtils.ConfigProperty.typeOf(getString(ctx, "property"))) {
                     bool -> listOf("true", "false")
