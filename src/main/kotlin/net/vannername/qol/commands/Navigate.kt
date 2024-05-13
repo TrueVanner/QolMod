@@ -1,9 +1,20 @@
 package net.vannername.qol.commands
 
 import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.arguments.BoolArgumentType
+import com.mojang.brigadier.arguments.BoolArgumentType.getBool
+import com.mojang.brigadier.arguments.IntegerArgumentType
+import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
+import com.mojang.brigadier.arguments.StringArgumentType.getString
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
+import com.mojang.brigadier.suggestion.SuggestionProvider
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import me.x150.renderer.event.RenderEvents
+import net.fabricmc.api.EnvType
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
+import net.minecraft.command.CommandSource
+import net.minecraft.command.suggestion.SuggestionProviders
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.Items
@@ -13,26 +24,68 @@ import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
+import net.vannername.qol.utils.ConfigUtils.configurableProps
 import net.vannername.qol.utils.Utils
 
 
 class Navigate {
     init {
-        CommandRegistrationCallback.EVENT.register { dispatcher, _, _ -> register(dispatcher) }
-    }
+        val suggestCoords: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("suggestCoords"))
+        { _: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
+            CommandSource.suggestMatching(
+                listOf("~ ~ ~", "0 0 0").stream(),
+                builder
+            )
+        }
 
-    private fun register(dispatcher: CommandDispatcher<ServerCommandSource?>) {
-        dispatcher.register(
-            CommandManager.literal("navigate")
-                .requires { source -> source.playerOrThrow.isOnGround }
-                .executes(this::run))
+        val commandNode = CommandManager
+            .literal("navigate")
+            .build()
+
+        val xNode = CommandManager
+            .argument("x", IntegerArgumentType.integer())
+            .suggests(suggestCoords)
+            .build()
+
+        val yNode = CommandManager
+            .argument("y", IntegerArgumentType.integer())
+            .suggests(suggestCoords)
+            .build()
+
+        val zNode = CommandManager
+            .argument("z", IntegerArgumentType.integer())
+            .suggests(suggestCoords)
+            .executes { ctx ->
+                run(
+                    getInteger(ctx, "x"), getInteger(ctx, "y"), getInteger(ctx, "z"), false, ctx
+                )
+            }
+            .build()
+
+        val isDirect = CommandManager
+            .argument("isDirect", BoolArgumentType.bool())
+            .suggests(Utils.boolSuggestionProvider)
+            .executes { ctx ->
+                run(
+                    getInteger(ctx, "x"), getInteger(ctx, "y"),getInteger(ctx, "z"), getBool(ctx, "isDirect"), ctx
+                )
+            }
+            .build()
+
+
+        CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
+            dispatcher.root.addChild(commandNode)
+            commandNode.addChild(xNode)
+            xNode.addChild(yNode)
+            yNode.addChild(zNode)
+            zNode.addChild(isDirect)
+        }
     }
 
     @Throws(CommandSyntaxException::class)
-    private fun run(context: CommandContext<ServerCommandSource>): Int {
-        val p = context.source.playerOrThrow
-
-
+    private fun run(x: Int, y: Int, z: Int, isDirect: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
+        val p = ctx.source.playerOrThrow
 
         return 1
     }

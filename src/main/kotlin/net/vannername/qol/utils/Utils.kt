@@ -1,12 +1,17 @@
 package net.vannername.qol.utils
 
 import com.mojang.brigadier.context.CommandContext
+import com.mojang.brigadier.suggestion.SuggestionProvider
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import eu.pb4.playerdata.api.PlayerDataApi
+import net.minecraft.command.CommandSource
+import net.minecraft.command.suggestion.SuggestionProviders
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import net.vannername.qol.QoLMod.DATA_STORAGE
 import net.vannername.qol.schemes.PlayerData
 import java.awt.Color
@@ -54,10 +59,6 @@ object Utils {
 
         // continue while matches still exist
         while(matcher.hasMatch()) {
-//            debug(currentIndex, "index before")
-//            debug(matcher.regionEnd(), "reg end")
-//            debug(matcher.start(), "start before")
-//            debug(matcher.end(), "end before")
 
             // if the current index is NOT the start of the next match (a.k.a text that is normal)
             if(currentIndex < matcher.start()) {
@@ -114,5 +115,14 @@ object Utils {
         BLUE(Color.BLUE),
         YELLOW(Color.YELLOW),
         CYAN(Color.CYAN),
+    }
+
+    @JvmStatic
+    val boolSuggestionProvider: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("bool"))
+    { _: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
+        CommandSource.suggestMatching(
+            listOf("true", "false").stream(),
+            builder
+        )
     }
 }

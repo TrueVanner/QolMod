@@ -64,6 +64,7 @@ object QoLMod : ModInitializer {
 		ConfigureProperty()
 		Testing()
 		MainGUI()
+		Navigate()
 
 		ServerTickEvents.END_WORLD_TICK.register { world ->
 			for (p in world.players) {

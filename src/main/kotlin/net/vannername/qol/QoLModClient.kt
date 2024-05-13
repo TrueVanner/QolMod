@@ -24,18 +24,13 @@ object QoLModClient : ClientModInitializer {
 		val angleProvider = CompassAnglePredicateProvider { world, _, _ -> GlobalPos(world.registryKey, BlockPos(0, 50, 0)) }
 
 		RenderEvents.HUD.register { matrices ->
+			
 			renderCompass(matrices.matrices, angleProvider, MinecraftClient.getInstance().player!!)
 		}
-
 	}
 
-
-	private fun renderCompass(matrixStack: MatrixStack, angleProvider: CompassAnglePredicateProvider, p: ClientPlayerEntity) {
-		val angle = (angleProvider.unclampedCall(
-			ItemStack(Items.COMPASS), p.clientWorld, p, 0
-		))
-
-		val textureID: String = when {
+	private fun getCompassTextureID(angle: Float): String {
+		return when {
 			angle == 0f -> "16"
 			angle < 0.015625f -> "17"
 			angle < 0.046875f -> "18"
@@ -70,40 +65,14 @@ object QoLModClient : ClientModInitializer {
 			angle < 0.953125f -> "15"
 			else -> "16"
 		}
-
-		Renderer2d.renderTexture(matrixStack, Identifier("textures/item/compass_${textureID}.png"), 100.0, 100.0, 16.0, 16.0)
-
-//		client.textureManager.getTexture(Identifier("item", "compass.json"))
-//		client.textureManager.getTexture(Identifier("compass_00"))
-
-	//		println(compass.registryEntry.key)
-//		try {
-//			val tessellator = Tessellator.getInstance()
-//			val builder = tessellator.buffer
-//
-////			client.itemRenderer.renderItem(compass, ModelTransformationMode.GROUND, 0xF000F0, OverlayTexture.DEFAULT_UV, matrixStack, VertexConsumerProvider.immediate(builder), null, 0)
-////			client.itemRenderer.renderItem(ItemStack(Items.DIRT), ModelTransformationMode.GROUND, 0xF000F0, OverlayTexture.DEFAULT_UV, matrixStack, VertexConsumerProvider.immediate(builder), null, 0)
-////			RenderSystem.setShader { GameRenderer.getPositionTexProgram() }
-//			tessellator.draw()
-//		} catch (e: Exception) {
-//			println("fuckup")
-//		}
+	}
 
 
-//		for(quad in MinecraftClient.getInstance().itemRenderer.getModel(compass, null, null, 0).getQuads(null, null, Random.create())) {
-//			buffer.quad(matrixStack.peek(), quad, )
-//		}
+	private fun renderCompass(matrixStack: MatrixStack, angleProvider: CompassAnglePredicateProvider, p: ClientPlayerEntity) {
+		val angle = (angleProvider.unclampedCall(
+			ItemStack(Items.COMPASS), p.clientWorld, p, 0
+		))
 
-//		tessellator.draw()
-
-	//		val model = MinecraftClient.getInstance().itemRenderer.getModel(compass, null, null, 0).getQuads(null, null, Random.create())
-//		val matrix: Matrix4f = Matrix4f(FloatBuffer.wrap(model[0].vertexData.map { elem -> elem.toFloat() }.toFloatArray()))
-
-//		model.getQuads()
-//		RenderSystem.getModelViewStack()
-//		Renderer2d.renderTexture(matrixStack)
-//		MinecraftClient.getInstance().itemRenderer.renderItem(compass, ModelTransformationMode.GUI, 15, 15, matrixStack, VertexConsumerProvider.immediate(
-//			Tessellator.getInstance().buffer
-//		), null, 0)
+		Renderer2d.renderTexture(matrixStack, Identifier("textures/item/compass_${getCompassTextureID(angle)}.png"), 100.0, 100.0, 16.0, 16.0)
 	}
 }

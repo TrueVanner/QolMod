@@ -10,7 +10,6 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.command.CommandSource
 import net.minecraft.command.suggestion.SuggestionProviders
 import net.minecraft.server.command.CommandManager
-import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
@@ -51,7 +50,7 @@ class ConfigureProperty {
                 )
             }
 
-        val command = CommandManager
+        val commandNode = CommandManager
             .literal("setproperty")
             .build()
 
@@ -76,8 +75,8 @@ class ConfigureProperty {
             .build()
 
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
-            dispatcher.root.addChild(command)
-            command.addChild(propertyNode)
+            dispatcher.root.addChild(commandNode)
+            commandNode.addChild(propertyNode)
             propertyNode.addChild(valueNode)
         }
     }
