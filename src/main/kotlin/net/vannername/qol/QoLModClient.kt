@@ -67,7 +67,6 @@ object QoLModClient : ClientModInitializer {
 		}
 	}
 
-
 	private fun renderCompass(matrixStack: MatrixStack, angleProvider: CompassAnglePredicateProvider, p: ClientPlayerEntity) {
 		val angle = (angleProvider.unclampedCall(
 			ItemStack(Items.COMPASS), p.clientWorld, p, 0

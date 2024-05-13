@@ -12,31 +12,16 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
-import net.vannername.qol.QoLMod.DATA_STORAGE
-import net.vannername.qol.schemes.PlayerData
+import net.vannername.qol.QoLMod
+import net.vannername.qol.schemes.PlayerConfig
 import java.awt.Color
 import java.util.regex.Pattern
 
 object Utils {
     @JvmStatic
-    fun getIntegerLocation(p: PlayerEntity): List<Int> {
-        return listOf(p.x.toInt(), p.y.toInt(), p.z.toInt())
-    }
-
-    @JvmStatic
     fun commandError(context: CommandContext<ServerCommandSource>, text: String): Int {
         context.source.sendError(Text.literal(text))
         return 0
-    }
-
-    @JvmStatic
-    fun ServerPlayerEntity.getPlayerData(): PlayerData {
-        return PlayerDataApi.getCustomDataFor(this, DATA_STORAGE)!!
-    }
-
-    @JvmStatic
-    fun ServerPlayerEntity.setPlayerData(data: PlayerData) {
-        PlayerDataApi.setCustomDataFor(this, DATA_STORAGE, data)
     }
 
     /**
@@ -125,4 +110,6 @@ object Utils {
             builder
         )
     }
+
+    class MyIdentifier(id: String) : Identifier(QoLMod.MOD_ID, id)
 }

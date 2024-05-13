@@ -40,6 +40,14 @@ repositories {
 		}
 	}
 
+	maven {
+		name = "Modrinth"
+		url = "https://api.modrinth.com/maven"
+		content {
+			includeGroup "maven.modrinth"
+		}
+	}
+
 	maven { url "https://jitpack.io"  }
 }
 
@@ -58,10 +66,12 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 	modImplementation "eu.pb4:player-data-api:[${project.player_data_api_version}]"
 	modImplementation "eu.pb4:sgui:[${project.server_gui_version}]"
-	modImplementation('com.github.0x3C50:Renderer:master-SNAPSHOT')
+	modImplementation 'com.github.0x3C50:Renderer:master-SNAPSHOT'
+	modImplementation "maven.modrinth:fzzy-config:${project.fzzy_config_version}"
 
 	implementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
 	implementation "org.assertj:assertj-core:3.25.1"
+	implementation "net.peanuuutz.tomlkt:tomlkt:0.3.7"
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
 

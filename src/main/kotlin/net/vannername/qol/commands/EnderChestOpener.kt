@@ -18,14 +18,12 @@ import net.vannername.qol.utils.Utils.commandError
 
 class EnderChestOpener {
     init {
-        CommandRegistrationCallback.EVENT.register { dispatcher, _, _ -> register(dispatcher) }
-    }
-
-    private fun register(dispatcher: CommandDispatcher<ServerCommandSource?>) {
-        dispatcher.register(
-            CommandManager.literal("e")
-                .executes { context -> run(context) }
-        )
+        CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
+            dispatcher.register(
+                CommandManager.literal("e")
+                    .executes { context -> run(context) }
+            )
+        }
     }
 
     @Throws(CommandSyntaxException::class)

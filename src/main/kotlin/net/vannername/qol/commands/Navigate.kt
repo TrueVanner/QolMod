@@ -25,7 +25,7 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
-import net.vannername.qol.utils.ConfigUtils.configurableProps
+//import net.vannername.qol.utils.ConfigUtils.configurableProps
 import net.vannername.qol.utils.Utils
 
 
@@ -40,11 +40,11 @@ class Navigate {
             }
         }
 
-        val suggestX: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("qol_mod", "suggest_x"),
+        val suggestX: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Utils.MyIdentifier("suggest_x"),
             suggestCoord(listOf("~", "0")))
-        val suggestY: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("qol_mod", "suggest_y"),
+        val suggestY: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Utils.MyIdentifier("suggest_y"),
             suggestCoord(listOf("~", "0")))
-        val suggestZ: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("qol_mod", "suggest_z"),
+        val suggestZ: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Utils.MyIdentifier("suggest_z"),
             suggestCoord(listOf("~", "0")))
 
         val commandNode = CommandManager

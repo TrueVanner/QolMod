@@ -20,8 +20,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static net.vannername.qol.QoLMod.DATA_STORAGE;
-
 @Mixin(PlayerEntity.class)
 public abstract class PlayerMixin extends LivingEntityMixin {
     private void detect(String message) {
