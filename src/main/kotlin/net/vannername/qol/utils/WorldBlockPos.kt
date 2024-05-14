@@ -1,5 +1,6 @@
 package net.vannername.qol.utils
 
+import me.fzzyhmstrs.fzzy_config.validation.minecraft.ValidatedIdentifier
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
@@ -13,9 +14,11 @@ import net.minecraft.world.dimension.DimensionType
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-class WorldBlockPos(x: Int, y: Int, z: Int, var worldID: Identifier) : BlockPos(x, y, z)
+open class WorldBlockPos(x: Int, y: Int, z: Int, worldKey: RegistryKey<World>) : BlockPos(x, y, z)
 {
-    constructor(x: Double, y: Double, z: Double, worldID: Identifier) : this(x.toInt(), y.toInt(), z.toInt(), worldID)
+    val worldID = worldKey.value
+
+    constructor(x: Double, y: Double, z: Double, worldID: RegistryKey<World>) : this(x.toInt(), y.toInt(), z.toInt(), worldID)
 
     fun getWorld(server: MinecraftServer): ServerWorld {
         return server.getWorld(RegistryKey.of(RegistryKeys.WORLD, worldID))!!

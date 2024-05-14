@@ -11,11 +11,13 @@ import net.minecraft.client.session.telemetry.WorldLoadedEvent
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.LodestoneTrackerComponent
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.GlobalPos
+import net.vannername.qol.utils.PlayerUtils.getConfig
 import java.util.*
 
 object QoLModClient : ClientModInitializer {
@@ -24,8 +26,10 @@ object QoLModClient : ClientModInitializer {
 		val angleProvider = CompassAnglePredicateProvider { world, _, _ -> GlobalPos(world.registryKey, BlockPos(0, 50, 0)) }
 
 		RenderEvents.HUD.register { matrices ->
-			
-			renderCompass(matrices.matrices, angleProvider, MinecraftClient.getInstance().player!!)
+			val p = MinecraftClient.getInstance().player!!
+			if(p.getConfig().navData.isNavigating) {
+				renderCompass(matrices.matrices, angleProvider, p)
+			}
 		}
 	}
 

@@ -25,6 +25,7 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.vannername.qol.QoLMod
 //import net.vannername.qol.utils.ConfigUtils.configurableProps
 import net.vannername.qol.utils.Utils
 
@@ -94,7 +95,6 @@ class Navigate {
     @Throws(CommandSyntaxException::class)
     private fun run(x: Int, y: Int, z: Int, isDirect: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
         val p = ctx.source.playerOrThrow
-
         return 1
     }
 }

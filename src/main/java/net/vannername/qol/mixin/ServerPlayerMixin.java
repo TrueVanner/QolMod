@@ -18,7 +18,7 @@ abstract public class ServerPlayerMixin extends LivingEntityMixin {
         ServerPlayerEntity p = (ServerPlayerEntity) (Object) this;
 
         var data = QoLMod.playerConfigs.get(p.getUuid());
-        if(data.getSendDeathCoords().get()) {
+        if(data.getSendCoordinatesOfDeath()) {
             p.sendMessage(Text.literal("You died at: ")
                     .append("%1$d %2$d %3$d".formatted((int) p.getX(), (int) p.getY(), (int) p.getZ()))
                     .withColor(Color.RED.getRGB())

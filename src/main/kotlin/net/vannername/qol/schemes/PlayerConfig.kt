@@ -12,6 +12,7 @@ import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedBoolean
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedColor
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.text.MutableText
+import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -19,36 +20,32 @@ import net.minecraft.world.dimension.DimensionOptions
 import net.minecraft.world.dimension.DimensionType
 import net.vannername.qol.utils.WorldBlockPos
 import net.vannername.qol.utils.Utils
+import org.jetbrains.annotations.PropertyKey
 import java.awt.Dimension
 import java.util.*
 
 // WARNING: setting object of PlayerData with null values throws an exception!
 
 class PlayerConfig(uuid: UUID) : Config(Utils.MyIdentifier(uuid.toString())) {
+    var sendCoordinatesOfDeath = true
+    var sendCoordinatesAboveHotbar = true
 
-    @Comment("Send coordinates of death?")
-    val sendDeathCoords = ValidatedBoolean(true)
-    @Comment("Display coordinates above hotbar?")
-    var sendActionbarCoords = ValidatedBoolean(true)
     @WithPerms(4)
-    var isAFK = ValidatedBoolean(false)
+    var isAFK = false
     @WithPerms(4)
-    var isSitting = ValidatedBoolean(false)
+    var isSitting = false
 
-    var actionbarCoordsColors = PlayerActionbarCoordsColors()
+    var colorsOfCoordsAboveHotbar = PlayerActionbarCoordsColors()
     class PlayerActionbarCoordsColors : ConfigSection() {
-        var text = ValidatedColor(Utils.Colors.YELLOW.c, false)
-        var coords = ValidatedColor(Utils.Colors.GREEN.c, false)
+        var colorOfText = ValidatedColor(Utils.Colors.YELLOW.c, false)
+        var colorOfCoords = ValidatedColor(Utils.Colors.GREEN.c, false)
     }
 
-    @Comment("Navigation data")
+    @WithPerms(4)
     var navData = PlayerNavigationData()
     class PlayerNavigationData : ConfigSection() {
-        @WithPerms(4)
-        var isNavigating = ValidatedBoolean(false)
-        @Comment("Where to?")
-        var worldBlockPos = ValidatedAny(WorldBlockPos(0, 0, 0, World.OVERWORLD.value))
-        @Comment("Is direct?")
+        var isNavigating = false
+        var whereTo = ValidatedAny(WorldBlockPos(0, 0, 0, World.OVERWORLD))
         var isDirect = ValidatedBoolean(false)
     }
 }
