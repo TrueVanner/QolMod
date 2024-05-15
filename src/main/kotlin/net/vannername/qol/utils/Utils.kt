@@ -97,6 +97,7 @@ object Utils {
         BLUE(Color.BLUE),
         YELLOW(Color.YELLOW),
         CYAN(Color.CYAN),
+        GRAY(Color.GRAY)
     }
 
     class MyIdentifier(id: String) : Identifier(QoLMod.MOD_ID, id)
