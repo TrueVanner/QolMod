@@ -1,15 +1,11 @@
 package net.vannername.qol.tests
 
 
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.test.GameTest
-import net.minecraft.test.TestContext
-import net.vannername.qol.schemes.PlayerConfig
-import net.vannername.qol.utils.Utils
-import org.assertj.core.api.Assertions.assertThat
-
 class GameTests {
+//    @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE)
+//    fun empty_test(ctx: TestContext) {
+//        ctx.complete()
+//    }
     /*
     @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE)
     fun test_config(ctx: TestContext) {

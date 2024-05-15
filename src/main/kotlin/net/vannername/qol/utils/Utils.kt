@@ -3,17 +3,14 @@ package net.vannername.qol.utils
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.SuggestionProvider
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
-import eu.pb4.playerdata.api.PlayerDataApi
 import net.minecraft.command.CommandSource
+import net.minecraft.command.CommandSource.RelativePosition
 import net.minecraft.command.suggestion.SuggestionProviders
-import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.vannername.qol.QoLMod
-import net.vannername.qol.schemes.PlayerConfig
 import java.awt.Color
 import java.util.regex.Pattern
 
@@ -102,14 +99,10 @@ object Utils {
         CYAN(Color.CYAN),
     }
 
-    @JvmStatic
-    val boolSuggestionProvider: SuggestionProvider<ServerCommandSource> = SuggestionProviders.register(Identifier("bool"))
-    { _: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
-        CommandSource.suggestMatching(
-            listOf("true", "false").stream(),
-            builder
-        )
-    }
-
     class MyIdentifier(id: String) : Identifier(QoLMod.MOD_ID, id)
+
+    fun String.toRelativePos(): RelativePosition {
+        val split = this.split(" ")
+        return RelativePosition(split[0], split[1], split[2])
+    }
 }

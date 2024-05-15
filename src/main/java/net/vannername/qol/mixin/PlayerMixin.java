@@ -1,7 +1,6 @@
 package net.vannername.qol.mixin;
 
 import com.mojang.authlib.GameProfile;
-import eu.pb4.playerdata.api.PlayerDataApi;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -12,13 +11,14 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.vannername.qol.QoLMod;
-import net.vannername.qol.utils.Utils;
+import net.vannername.qol.utils.PlayerConfig;
+import net.vannername.qol.utils.PlayerUtils;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.awt.*;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerMixin extends LivingEntityMixin {
@@ -26,6 +26,20 @@ public abstract class PlayerMixin extends LivingEntityMixin {
         PlayerEntity player = (PlayerEntity) (Object) this;
         player.sendMessage(Text.literal(message));
         LoggerFactory.getLogger(QoLMod.MOD_ID).info(message);
+    }
+
+    @Override
+    public void onPlayerDeath(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        PlayerEntity p = (PlayerEntity) (Object) this;
+
+        PlayerConfig data = PlayerUtils.getConfig(p);
+
+        if(data.getSendCoordinatesOfDeath()) {
+            p.sendMessage(Text.literal("You died at: ")
+                    .append("%1$d %2$d %3$d".formatted((int) p.getX(), (int) p.getY(), (int) p.getZ()))
+                    .withColor(Color.RED.getRGB())
+            );
+        }
     }
 
 //    @Inject(method = "dropItem(Lnet/minecraft/item/ItemStack;ZZ)Lnet/minecraft/entity/ItemEntity;", at = @At("TAIL"))

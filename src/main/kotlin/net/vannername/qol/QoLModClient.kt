@@ -18,6 +18,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.GlobalPos
 import net.vannername.qol.utils.PlayerUtils.getConfig
+import net.vannername.qol.utils.PlayerUtils.hasConfig
 import java.util.*
 
 object QoLModClient : ClientModInitializer {
@@ -27,8 +28,10 @@ object QoLModClient : ClientModInitializer {
 
 		RenderEvents.HUD.register { matrices ->
 			val p = MinecraftClient.getInstance().player!!
-			if(p.getConfig().navData.isNavigating) {
-				renderCompass(matrices.matrices, angleProvider, p)
+			if(p.hasConfig()) {
+				if(p.getConfig().navData.isNavigating) {
+					renderCompass(matrices.matrices, angleProvider, p)
+				}
 			}
 		}
 	}
@@ -72,6 +75,7 @@ object QoLModClient : ClientModInitializer {
 	}
 
 	private fun renderCompass(matrixStack: MatrixStack, angleProvider: CompassAnglePredicateProvider, p: ClientPlayerEntity) {
+		// TODO: beautify, change compass location + make it responsive to off-hand slot
 		val angle = (angleProvider.unclampedCall(
 			ItemStack(Items.COMPASS), p.clientWorld, p, 0
 		))
