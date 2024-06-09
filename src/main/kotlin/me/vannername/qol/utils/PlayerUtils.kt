@@ -1,6 +1,7 @@
 package me.vannername.qol.utils
 
 import me.vannername.qol.QoLMod
+import me.vannername.qol.config.PlayerConfig
 import me.vannername.qol.utils.Utils.multiColored
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.text.Text

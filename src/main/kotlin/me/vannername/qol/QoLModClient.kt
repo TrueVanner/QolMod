@@ -2,7 +2,7 @@ package me.vannername.qol
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
 import me.vannername.qol.QoLMod.playerConfigs
-import me.vannername.qol.utils.PlayerConfig
+import me.vannername.qol.config.PlayerConfig
 import me.vannername.qol.utils.PlayerUtils.getConfig
 import me.vannername.qol.utils.PlayerUtils.hasConfig
 import me.x150.renderer.event.RenderEvents

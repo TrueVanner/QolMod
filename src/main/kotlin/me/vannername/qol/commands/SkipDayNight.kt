@@ -4,29 +4,40 @@ import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
+import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedAny
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import me.vannername.qol.QoLMod.serverConfig
 import me.vannername.qol.utils.Utils
+import me.vannername.qol.utils.Utils.appendCommandSuggestion
 import me.vannername.qol.utils.Utils.multiColored
+import me.vannername.qol.utils.Utils.sentenceCase
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.util.*
 
 class SkipDayNight {
 
+    // TODO: Add skip- force
+    // TODO: Add suggestions for duration
+
     init {
+        Mode.NIGHT.opposite = Mode.DAY
+        Mode.DAY.opposite = Mode.NIGHT
         register()
         detectTimeChange()
     }
 
-    private var skipNightForce = false
-    private var skipDayForce = false
-
     private fun register() {
+
+        fun currentMode(ctx: CommandContext<ServerCommandSource>): Mode {
+            return if (ctx.input.contains("skipday")) Mode.DAY else Mode.NIGHT
+        }
+
         val skipDayNode = CommandManager
             .literal("skipday")
             .build()
@@ -39,40 +50,42 @@ class SkipDayNight {
             .argument("duration", IntegerArgumentType.integer())
 //            .suggests()
             .executes { ctx ->
-                println(ctx.rootNode.name)
-                println(ctx.command.toString())
-                skipPeriod(Mode.NIGHT, getInteger(ctx, "duration"), false, ctx)
+                skipPeriod(currentMode(ctx), getInteger(ctx, "duration"), false, ctx)
             }
             .build()
 
         val infNode = CommandManager
             .literal("inf")
             .executes { ctx ->
-                skipPeriod(Mode.NIGHT, 1, true, ctx)
+                skipPeriod(currentMode(ctx), 0, true, ctx)
             }
             .build()
 
         val forceNode = CommandManager
             .literal("force")
-            .executes { _ ->
-                skipNightForce = true
+            .executes { ctx ->
+                currentMode(ctx).skipForce = true
                 1
             }
             .build()
 
         val statusNode = CommandManager
             .literal("status")
-            .executes(::showStatus)
+            .executes { ctx ->
+                showStatus(currentMode(ctx), ctx)
+            }
             .build()
 
 
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.root.addChild(skipNightNode)
             dispatcher.root.addChild(skipDayNode)
+
             skipNightNode.addChild(durationNode)
             skipNightNode.addChild(infNode)
             skipNightNode.addChild(forceNode)
             skipNightNode.addChild(statusNode)
+
             skipDayNode.addChild(durationNode)
             skipDayNode.addChild(infNode)
             skipDayNode.addChild(forceNode)
@@ -92,29 +105,11 @@ class SkipDayNight {
         // In clear weather, undead mobs begin to burn.
 
         ServerTickEvents.END_WORLD_TICK.register { world ->
-            // shortcuts
-            val days = serverConfig.skippingSettings.daysToSkip.get()
-            val nights = serverConfig.skippingSettings.nightsToSkip.get()
-
             try {
                 if (world.timeOfDay in 12000..23459) {
-                    // Night
-                    skipNightForce = false
-                    if (days.getAndUpdate() > 0 && !skipDayForce) {
-                        world.timeOfDay = 0
-                        world.players.forEach {
-                            it.sendMessage(Text.literal("Night successfully skipped!").formatted(Formatting.AQUA))
-                        }
-                    }
+                    performSkip(Mode.NIGHT, world)
                 } else {
-                    // Day
-                    skipDayForce = false
-                    if (nights.getAndUpdate() > 0 && !skipNightForce) {
-                        world.timeOfDay = 13000
-                        world.players.forEach {
-                            it.sendMessage(Text.literal("Day successfully skipped!").formatted(Formatting.AQUA))
-                        }
-                    }
+                    performSkip(Mode.DAY, world)
                 }
             } catch (e: IllegalStateException) {
                 // Should only be thrown if the period is 0 and skipping is
@@ -123,39 +118,78 @@ class SkipDayNight {
         }
     }
 
-    private enum class Mode {
-        DAY,
-        NIGHT
+    @Throws(IllegalStateException::class)
+    private fun performSkip(mode: Mode, world: ServerWorld) {
+        val currentValue = mode.associatedEntry.get().getAndUpdate()
+        if (!mode.opposite!!.skipForce) {
+            world.timeOfDay = if (mode == Mode.DAY) 13000 else 0
+            world.players.forEach {
+                it.sendMessage(
+                    Text.literal("${mode.name.sentenceCase()} successfully skipped!").formatted(Formatting.AQUA)
+                )
+                if (currentValue == 1) {
+                    it.sendMessage(
+                        Text.literal("Warning: this was the last ${mode.name.lowercase()} skip.")
+                            .formatted(Formatting.YELLOW)
+                    )
+                }
+            }
+        }
     }
 
+    /**
+     * A class that represents the mode (day or night) to skip.
+     */
+    enum class Mode(
+        val color: Utils.Colors,
+        val associatedEntry: ValidatedAny<SkipPeriod>,
+        var opposite: Mode? = null,
+        var skipForce: Boolean = false
+    ) {
+        DAY(Utils.Colors.YELLOW, serverConfig.skippingSettings.daysToSkip),
+        NIGHT(Utils.Colors.GRAY, serverConfig.skippingSettings.nightsToSkip)
+    }
+
+    /**
+     * Set the number of days or nights to skip.
+     *
+     * @param mode The mode (day or night) to skip.
+     * @param duration The number of days or nights to skip.
+     * @param isInfinite Whether the period is infinite or not.
+     */
     @Throws(CommandSyntaxException::class)
     private fun skipPeriod(
         mode: Mode,
         duration: Int,
         isInfinite: Boolean,
-        context: CommandContext<ServerCommandSource>
+        ctx: CommandContext<ServerCommandSource>
     ): Int {
+        if (mode.opposite!!.associatedEntry.get().isSet()) {
 
-        if (mode == Mode.DAY) {
-            serverConfig.skippingSettings.daysToSkip.validateAndSet(SkipPeriod(duration, isInfinite))
-        } else {
-            serverConfig.skippingSettings.nightsToSkip.validateAndSet(SkipPeriod(duration, isInfinite))
+            ctx.source.sendMessage(
+                Text.literal("${mode.opposite!!.name.lowercase()} skipping has already been set. Use ")
+                    .appendCommandSuggestion("/skip${mode.name.lowercase()} force")
+                    .append(" to skip one ${mode.name.sentenceCase()} anyway.")
+                    .formatted(Formatting.RED)
+            )
+            return 0
         }
+        mode.associatedEntry.validateAndSet(SkipPeriod(duration, isInfinite))
+        ctx.source.sendMessage(
+            Text.literal("${mode.name.sentenceCase()} skipping set to: %c{${mode.associatedEntry.get()}}")
+                .multiColored(listOf(mode.color), Utils.Colors.CYAN)
+        )
         return 1
     }
 
     /**
      * Show the current status of the day/night skipping settings.
      */
-    private fun showStatus(context: CommandContext<ServerCommandSource>): Int {
-        val source = context.source
+    private fun showStatus(mode: Mode, ctx: CommandContext<ServerCommandSource>): Int {
+        val source = ctx.source
         source.sendMessage(
-            Text.literal("Nights more to skip: %c{${serverConfig.skippingSettings.nightsToSkip.get()}}")
-                .multiColored(listOf(Utils.Colors.GRAY), Utils.Colors.CYAN)
-        )
-        source.sendMessage(
-            Text.literal("Days more to skip: %c{${serverConfig.skippingSettings.daysToSkip.get()}}")
-                .multiColored(listOf(Utils.Colors.YELLOW), Utils.Colors.CYAN)
+            Text.literal("${mode.name.sentenceCase()}s more to skip: %c{${mode.associatedEntry.get()}}")
+                .multiColored(listOf(mode.color), Utils.Colors.CYAN)
         )
 
         return 1
@@ -167,11 +201,15 @@ class SkipDayNight {
      * @param period The number of days or nights to skip.
      * @param isInfinite Whether the period is infinite or not.
      */
-    class SkipPeriod(period: Int, private val isInfinite: Boolean) {
-        private val period = ValidatedInt(period, 100, 0)
+    class SkipPeriod(period: Int, val isInfinite: Boolean) {
+        val period = ValidatedInt(period, 100, 0)
 
         override fun toString(): String {
-            return if (isInfinite) "Infinite" else period.toString()
+            return if (isInfinite) "Infinite" else period.get().toString()
+        }
+
+        fun isSet(): Boolean {
+            return period.get() != 0 || isInfinite
         }
 
         /**

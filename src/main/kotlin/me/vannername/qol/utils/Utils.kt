@@ -3,8 +3,8 @@ package me.vannername.qol.utils
 import com.mojang.brigadier.context.CommandContext
 import me.vannername.qol.QoLMod
 import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
+import net.minecraft.text.*
+import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import java.awt.Color
 import java.util.regex.Pattern
@@ -96,4 +96,24 @@ object Utils {
     }
 
     class MyIdentifier(id: String) : Identifier(QoLMod.MOD_ID, id)
+
+    fun String.sentenceCase(): String {
+        return this[0].uppercase() + this.substring(1).lowercase()
+    }
+
+    fun MutableText.appendCommandSuggestion(command: String): MutableText {
+        val link = Text.literal(command)
+        link.setStyle(
+            Style.EMPTY.withClickEvent(
+                ClickEvent(
+                    ClickEvent.Action.SUGGEST_COMMAND,
+                    command
+                )
+            ).withHoverEvent(
+                HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(command))
+            )
+        )
+        link.formatted(Formatting.UNDERLINE)
+        return append(link)
+    }
 }

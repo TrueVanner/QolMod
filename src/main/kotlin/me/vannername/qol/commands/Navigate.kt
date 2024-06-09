@@ -8,6 +8,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException
 import me.vannername.qol.utils.PlayerUtils.getConfig
 import me.vannername.qol.utils.PlayerUtils.startNavigation
 import me.vannername.qol.utils.PlayerUtils.stopNavigation
+import me.vannername.qol.utils.Utils.appendCommandSuggestion
 import me.vannername.qol.utils.WorldBlockPos
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
@@ -15,14 +16,17 @@ import net.minecraft.command.argument.BlockPosArgumentType
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
 
 
 class Navigate {
+
+    // TODO: fix compass location
+    // TODO: add suggestions for coordinates
+    // TODO: tests
+
     init {
         register()
         detectNavigationEnd()
@@ -158,19 +162,10 @@ class Navigate {
      * if the player changes worlds.
      */
     private fun handleWorldChange(p: ServerPlayerEntity) {
-        val link = Text.literal("/navigate continue")
-        link.setStyle(
-            Style.EMPTY.withClickEvent(
-                ClickEvent(
-                    ClickEvent.Action.RUN_COMMAND,
-                    "/navigate continue"
-                )
-            )
-        )
-        link.formatted(Formatting.AQUA)
         p.sendMessage(
             Text.literal("Navigation paused due to changing dimensions. Use ")
-                .append(link).append(" to continue when you get back.").formatted(Formatting.YELLOW)
+                .appendCommandSuggestion("/navigate continue")
+                .append(" to continue when you get back.").formatted(Formatting.YELLOW)
         )
     }
 }

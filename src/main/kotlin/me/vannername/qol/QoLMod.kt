@@ -1,15 +1,15 @@
 package me.vannername.qol
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
-import me.vannername.qol.commands.ConfigureProperty
 import me.vannername.qol.commands.EnderChestOpener
 import me.vannername.qol.commands.Navigate
+import me.vannername.qol.commands.SkipDayNight
 import me.vannername.qol.commands.Testing
+import me.vannername.qol.config.PlayerConfig
+import me.vannername.qol.config.ServerConfig
 import me.vannername.qol.gui.MainGUI
-import me.vannername.qol.utils.PlayerConfig
 import me.vannername.qol.utils.PlayerUtils.displayActionbarCoords
 import me.vannername.qol.utils.PlayerUtils.displayNavCoords
-import me.vannername.qol.utils.ServerConfig
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
@@ -26,15 +26,21 @@ object QoLMod : ModInitializer {
 
     @JvmField
     var playerConfigs: Map<UUID, PlayerConfig> = mutableMapOf()
+
     val serverConfig = ConfigApi.registerAndLoadConfig({ ServerConfig() })
+
+//    for testing
+//    val serverConfig = ServerConfig()
+
 
     override fun onInitialize() {
 //		MidnightConfig.init(MOD_ID, MidnightConfigExample::class.java)
         EnderChestOpener()
-        ConfigureProperty()
+//        ConfigureProperty()
         Testing()
         MainGUI()
         Navigate()
+        SkipDayNight()
 
         ServerPlayConnectionEvents.JOIN.register { networkHandler, _, _ ->
             val uuid = networkHandler.player.uuid

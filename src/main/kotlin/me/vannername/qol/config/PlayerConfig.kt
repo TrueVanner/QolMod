@@ -1,10 +1,12 @@
-package me.vannername.qol.utils
+package me.vannername.qol.config
 
 import me.fzzyhmstrs.fzzy_config.annotations.ClientModifiable
 import me.fzzyhmstrs.fzzy_config.config.Config
 import me.fzzyhmstrs.fzzy_config.config.ConfigSection
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedAny
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedColor
+import me.vannername.qol.utils.Utils
+import me.vannername.qol.utils.WorldBlockPos
 import net.minecraft.world.World
 import java.util.*
 

@@ -2,7 +2,7 @@ package me.vannername.qol.mixin;
 
 import com.mojang.authlib.GameProfile;
 import me.vannername.qol.QoLMod;
-import me.vannername.qol.utils.PlayerConfig;
+import me.vannername.qol.config.PlayerConfig;
 import me.vannername.qol.utils.PlayerUtils;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;

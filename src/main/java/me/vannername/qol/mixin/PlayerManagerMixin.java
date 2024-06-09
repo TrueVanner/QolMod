@@ -4,7 +4,7 @@ package me.vannername.qol.mixin;
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi;
 import me.fzzyhmstrs.fzzy_config.api.RegisterType;
 import me.vannername.qol.QoLMod;
-import me.vannername.qol.utils.PlayerConfig;
+import me.vannername.qol.config.PlayerConfig;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ConnectedClientData;
