@@ -1,4 +1,4 @@
-package net.vannername.qol.tests
+package me.vannername.qol.tests
 
 
 class GameTests {

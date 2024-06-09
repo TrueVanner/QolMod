@@ -1,8 +1,8 @@
-package net.vannername.qol.commands
+package me.vannername.qol.commands
 
-import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
+import me.vannername.qol.utils.Utils.commandError
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -13,7 +13,6 @@ import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-import net.vannername.qol.utils.Utils.commandError
 
 
 class EnderChestOpener {

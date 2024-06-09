@@ -1,4 +1,4 @@
-package net.vannername.qol.mixin;
+package me.vannername.qol.mixin;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;

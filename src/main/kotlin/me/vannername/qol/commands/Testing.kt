@@ -1,4 +1,4 @@
-package net.vannername.qol.commands
+package me.vannername.qol.commands
 
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
@@ -17,8 +17,10 @@ class Testing {
     init {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
-            CommandManager.literal("vn_test")
-                .executes(this::run)) }
+                CommandManager.literal("vn_test")
+                    .executes(this::run)
+            )
+        }
     }
 
     @Throws(CommandSyntaxException::class)
@@ -26,7 +28,10 @@ class Testing {
         val p = context.source.playerOrThrow
 
         val compass = ItemStack(Items.COMPASS)
-        compass.set(DataComponentTypes.LODESTONE_TRACKER, LodestoneTrackerComponent(Optional.of(GlobalPos.create(p.world.registryKey, BlockPos(0, 50, 0))), false))
+        compass.set(
+            DataComponentTypes.LODESTONE_TRACKER,
+            LodestoneTrackerComponent(Optional.of(GlobalPos.create(p.world.registryKey, BlockPos(0, 50, 0))), false)
+        )
         p.giveItemStack(compass)
 
         return 1

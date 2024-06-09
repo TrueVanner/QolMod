@@ -1,4 +1,4 @@
-package net.vannername.qol.gui
+package me.vannername.qol.gui
 
 import com.mojang.authlib.GameProfile
 import com.mojang.brigadier.CommandDispatcher
@@ -7,7 +7,6 @@ import eu.pb4.sgui.api.ClickType
 import eu.pb4.sgui.api.elements.*
 import eu.pb4.sgui.api.gui.SimpleGui
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
-import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.Items
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.screen.slot.Slot

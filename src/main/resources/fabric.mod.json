@@ -1,56 +1,56 @@
 {
-	"schemaVersion": 1,
-	"id": "vannername-qol-mod",
-	"version": "${version}",
-	"name": "VannerName's QoL Mod",
-	"description": "This is an example description! Tell everyone what your mod is about!",
-	"authors": [
-		"Me!"
-	],
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
-	"license": "MIT",
-	"icon": "assets/vannername-qol-mod/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"main": [
-			{
-				"value": "net.vannername.qol.QoLMod",
-				"adapter": "kotlin"
-			}
-		],
-		"client": [
-			{
-				"value": "net.vannername.qol.QoLModClient",
-				"adapter": "kotlin"
-			}
-		],
-		"fabric-datagen": [
-			{
-				"value": "net.vannername.qol.QoLModDataGenerator",
-				"adapter": "kotlin"
-			}
-		],
-		"fabric-gametest": [
-			{
-				"value": "net.vannername.qol.tests.GameTests",
-				"adapter": "kotlin"
-			}
-		]
-	},
-	"mixins": [
-		"vannername-qol-mod.mixins.json"
-	],
-	"depends": {
-		"fabricloader": ">=0.15.9",
-		"minecraft": "~1.20.4",
-		"java": ">=17",
-		"fabric-api": "*",
-		"fabric-language-kotlin": ">=1.9.23"
-	},
-	"suggests": {
-		"another-mod": "*"
-	}
+  "schemaVersion": 1,
+  "id": "vannername-qol-mod",
+  "version": "${version}",
+  "name": "VannerName's QoL Mod",
+  "description": "This is an example description! Tell everyone what your mod is about!",
+  "authors": [
+    "Me!"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+  "license": "MIT",
+  "icon": "assets/vannername-qol-mod/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      {
+        "value": "me.vannername.qol.QoLMod",
+        "adapter": "kotlin"
+      }
+    ],
+    "client": [
+      {
+        "value": "me.vannername.qol.QoLModClient",
+        "adapter": "kotlin"
+      }
+    ],
+    "fabric-datagen": [
+      {
+        "value": "me.vannername.qol.QoLModDataGenerator",
+        "adapter": "kotlin"
+      }
+    ],
+    "fabric-gametest": [
+      {
+        "value": "me.vannername.qol.tests.GameTests",
+        "adapter": "kotlin"
+      }
+    ]
+  },
+  "mixins": [
+    "vannername-qol-mod.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.9",
+    "minecraft": "~1.20.4",
+    "java": ">=17",
+    "fabric-api": "*",
+    "fabric-language-kotlin": ">=1.9.23"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
 }

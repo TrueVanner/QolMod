@@ -1,4 +1,4 @@
-package net.vannername.qol.mixin;
+package me.vannername.qol.mixin;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -10,5 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
     @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;onDeath(Lnet/minecraft/entity/damage/DamageSource;)V"))
-    public void onPlayerDeath(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {}
+    public void onPlayerDeath(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    }
 }

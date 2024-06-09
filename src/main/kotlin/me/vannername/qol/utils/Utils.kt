@@ -1,16 +1,11 @@
-package net.vannername.qol.utils
+package me.vannername.qol.utils
 
 import com.mojang.brigadier.context.CommandContext
-import com.mojang.brigadier.suggestion.SuggestionProvider
-import com.mojang.brigadier.suggestion.SuggestionsBuilder
-import net.minecraft.command.CommandSource
-import net.minecraft.command.CommandSource.RelativePosition
-import net.minecraft.command.suggestion.SuggestionProviders
+import me.vannername.qol.QoLMod
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
-import net.vannername.qol.QoLMod
 import java.awt.Color
 import java.util.regex.Pattern
 
@@ -40,10 +35,10 @@ object Utils {
         matcher.find() // run the first detection and find the first match
 
         // continue while matches still exist
-        while(matcher.hasMatch()) {
+        while (matcher.hasMatch()) {
 
             // if the current index is NOT the start of the next match (a.k.a text that is normal)
-            if(currentIndex < matcher.start()) {
+            if (currentIndex < matcher.start()) {
                 // append the text from current index till the next match (a.k.a normal text) and color it global color
                 text.append(Text.literal(this.string.substring(currentIndex, matcher.start())).withColor(globalColor))
                 // set current index to the start of the match
@@ -56,7 +51,7 @@ object Utils {
                     0
                 }
 
-                if(colorID < 0 || colorID > colors.size) {
+                if (colorID < 0 || colorID > colors.size) {
                     throw RuntimeException("Illegal color index or insufficient number of colors to color the text")
                 }
 
@@ -86,7 +81,7 @@ object Utils {
 
     @JvmStatic
     fun debug(value: Any, name: String? = null) {
-       println(if(name != null) "$name: $value" else value)
+        println(if (name != null) "$name: $value" else value)
     }
 
     // MY collection of the most popular colors.
@@ -101,9 +96,4 @@ object Utils {
     }
 
     class MyIdentifier(id: String) : Identifier(QoLMod.MOD_ID, id)
-
-    fun String.toRelativePos(): RelativePosition {
-        val split = this.split(" ")
-        return RelativePosition(split[0], split[1], split[2])
-    }
 }
