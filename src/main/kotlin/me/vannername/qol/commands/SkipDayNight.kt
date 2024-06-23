@@ -6,25 +6,25 @@ import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedAny
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
+import me.vannername.qol.QoLMod
 import me.vannername.qol.QoLMod.serverConfig
 import me.vannername.qol.utils.Utils
 import me.vannername.qol.utils.Utils.appendCommandSuggestion
 import me.vannername.qol.utils.Utils.multiColored
+import me.vannername.qol.utils.Utils.sendCommandError
 import me.vannername.qol.utils.Utils.sentenceCase
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.util.*
 
 class SkipDayNight {
 
-    // TODO: Add skip- force
+    // TODO: resolve errors with skip force
     // TODO: Add suggestions for duration
-
     init {
         Mode.NIGHT.opposite = Mode.DAY
         Mode.DAY.opposite = Mode.NIGHT
@@ -64,7 +64,7 @@ class SkipDayNight {
         val forceNode = CommandManager
             .literal("force")
             .executes { ctx ->
-                currentMode(ctx).skipForce = true
+                skipForce(currentMode(ctx), ctx)
                 1
             }
             .build()
@@ -106,11 +106,8 @@ class SkipDayNight {
 
         ServerTickEvents.END_WORLD_TICK.register { world ->
             try {
-                if (world.timeOfDay in 12000..23459) {
-                    performSkip(Mode.NIGHT, world)
-                } else {
-                    performSkip(Mode.DAY, world)
-                }
+                val mode = if (world.timeOfDay in 12000..23459) Mode.NIGHT else Mode.DAY
+                performSkip(mode)
             } catch (e: IllegalStateException) {
                 // Should only be thrown if the period is 0 and skipping is
                 // impossible; Do nothing
@@ -119,8 +116,10 @@ class SkipDayNight {
     }
 
     @Throws(IllegalStateException::class)
-    private fun performSkip(mode: Mode, world: ServerWorld) {
+    private fun performSkip(mode: Mode) {
+        val world = QoLMod.defaultWorld!!
         val currentValue = mode.associatedEntry.get().getAndUpdate()
+
         if (!mode.opposite!!.skipForce) {
             world.timeOfDay = if (mode == Mode.DAY) 13000 else 0
             world.players.forEach {
@@ -180,6 +179,22 @@ class SkipDayNight {
                 .multiColored(listOf(mode.color), Utils.Colors.CYAN)
         )
         return 1
+    }
+
+
+    private fun skipForce(mode: Mode, ctx: CommandContext<ServerCommandSource>) {
+        if (mode.opposite!!.skipForce) {
+            ctx.sendCommandError("/skip${mode.name.lowercase()} force has already been set.")
+            return
+        }
+
+        mode.skipForce = true
+        performSkip(mode)
+
+        ctx.source.sendMessage(
+            Text.literal("One ${mode.name.lowercase()} has been force-skipped.")
+                .formatted(Formatting.AQUA)
+        )
     }
 
     /**

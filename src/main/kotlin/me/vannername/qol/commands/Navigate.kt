@@ -19,6 +19,9 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
 
 
 class Navigate {
@@ -32,6 +35,32 @@ class Navigate {
         detectNavigationEnd()
     }
 
+    /**
+     * Only works if the server has the [Coord Finder](https://modrinth.com/mod/coord-finder/version/fabric-1.20.6-1.1.0) mod installed.
+     * Transforms the positions specified in the config file of the mod to the list of positions in the current mod's format.
+     *
+     * @return the list of the positions on the server stored in positions.properties
+     */
+    private fun decomposeCoordsLocations(): List<WorldBlockPos>? {
+        try {
+            val locations = Files.readAllLines(Path.of("config/coordfinder/places.properties"))
+            return locations.map { line ->
+                val coords = line.split("=")[1].split(",")
+                WorldBlockPos(coords[0].toInt(), coords[1].toInt(), coords[2].toInt(), coords[3])
+            }
+        } catch (_: IOException) {
+            // if the file doesn't exist
+            return null
+        }
+    }
+//        SuggestionProviders.register(Utils.MyIdentifier(""))
+//        { _: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
+//            CommandSource.suggestMatching(
+//                configurableProps.map { prop -> prop.text },
+//                builder
+//            )
+//        }
+
     private fun register() {
         val commandNode = CommandManager
             .literal("navigate")
@@ -44,7 +73,10 @@ class Navigate {
 
         val coordsNode = CommandManager
             .argument("coords", BlockPosArgumentType.blockPos())
-            .suggests(BlockPosArgumentType()::listSuggestions)
+//            .suggests(BlockPosArgumentType()::listSuggestions)
+//            .suggests { ctx, builder ->
+//                SuggestionProviders.ASK_SERVER.getSuggestions(ctx, builder)
+//            }
             .executes { ctx ->
                 startNavigation(
                     BlockPosArgumentType.getBlockPos(ctx, "coords"), false, ctx

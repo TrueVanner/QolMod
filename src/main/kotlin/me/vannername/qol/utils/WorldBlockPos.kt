@@ -4,6 +4,7 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import kotlin.math.pow
@@ -12,9 +13,9 @@ import kotlin.math.sqrt
 /**
  * Represents a position in the world. Serves as an extension of BlockPos.
  */
-open class WorldBlockPos(x: Int, y: Int, z: Int, worldKey: RegistryKey<World>) : BlockPos(x, y, z) {
-    val worldID = worldKey.value
+open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos(x, y, z) {
 
+    constructor(x: Int, y: Int, z: Int, worldKey: RegistryKey<World>) : this(x, y, z, worldKey.value.toString())
     constructor(pos: BlockPos, worldID: RegistryKey<World>) : this(pos.x, pos.y, pos.z, worldID)
     constructor(x: Double, y: Double, z: Double, worldID: RegistryKey<World>) : this(
         BlockPos(
@@ -25,7 +26,7 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, worldKey: RegistryKey<World>) :
     )
 
     fun getWorld(server: MinecraftServer): ServerWorld {
-        return server.getWorld(RegistryKey.of(RegistryKeys.WORLD, worldID))!!
+        return server.getWorld(RegistryKey.of(RegistryKeys.WORLD, Identifier(worldID)))!!
     }
 
     fun getDistance(l: WorldBlockPos): Double {
@@ -41,6 +42,6 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, worldKey: RegistryKey<World>) :
      * Checks if the world is equal to the world of this WorldBlockPos.
      */
     fun isInSameWorld(world: World): Boolean {
-        return worldID == world.registryKey.value
+        return worldID == world.registryKey.value.toString()
     }
 }

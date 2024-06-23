@@ -10,9 +10,13 @@ import java.awt.Color
 import java.util.regex.Pattern
 
 object Utils {
-    @JvmStatic
-    fun commandError(context: CommandContext<ServerCommandSource>, text: String): Int {
-        context.source.sendError(Text.literal(text))
+    // shortcuts.
+    fun CommandContext<ServerCommandSource>.simpleMessage(text: String) {
+        this.source.sendMessage(Text.literal(text))
+    }
+
+    fun CommandContext<ServerCommandSource>.sendCommandError(text: String): Int {
+        this.source.sendError(Text.literal(text).formatted(Formatting.RED))
         return 0
     }
 

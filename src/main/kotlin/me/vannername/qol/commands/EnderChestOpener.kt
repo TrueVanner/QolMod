@@ -2,7 +2,7 @@ package me.vannername.qol.commands
 
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
-import me.vannername.qol.utils.Utils.commandError
+import me.vannername.qol.utils.Utils.sendCommandError
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -20,17 +20,17 @@ class EnderChestOpener {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
                 CommandManager.literal("e")
-                    .executes { context -> run(context) }
+                    .executes { ctx -> run(ctx) }
             )
         }
     }
 
     @Throws(CommandSyntaxException::class)
-    private fun run(context: CommandContext<ServerCommandSource>): Int {
-        val p = context.source.playerOrThrow
+    private fun run(ctx: CommandContext<ServerCommandSource>): Int {
+        val p = ctx.source.playerOrThrow
 
         if (!p.inventory.containsAny { stack -> stack.isOf(Items.ENDER_CHEST) }) {
-            return commandError(context, "You don't have an ender chest in your inventory!")
+            return ctx.sendCommandError("You don't have an ender chest in your inventory!")
         }
 
         openEnderChest(p)
