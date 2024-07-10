@@ -5,14 +5,21 @@ import com.mojang.brigadier.arguments.BoolArgumentType
 import com.mojang.brigadier.arguments.BoolArgumentType.getBool
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
+import com.mojang.brigadier.suggestion.SuggestionProvider
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import me.vannername.qol.utils.PlayerUtils.getConfig
 import me.vannername.qol.utils.PlayerUtils.startNavigation
 import me.vannername.qol.utils.PlayerUtils.stopNavigation
+import me.vannername.qol.utils.Utils
 import me.vannername.qol.utils.Utils.appendCommandSuggestion
 import me.vannername.qol.utils.WorldBlockPos
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
+import net.minecraft.command.CommandSource
+import net.minecraft.command.CommandSource.RelativePosition
 import net.minecraft.command.argument.BlockPosArgumentType
+import net.minecraft.command.argument.DefaultPosArgument
+import net.minecraft.command.suggestion.SuggestionProviders
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.network.ServerPlayerEntity
@@ -41,25 +48,31 @@ class Navigate {
      *
      * @return the list of the positions on the server stored in positions.properties
      */
-    private fun decomposeCoordsLocations(): List<WorldBlockPos>? {
+    private fun decomposeCoordsLocations(): List<RelativePosition>? {
         try {
             val locations = Files.readAllLines(Path.of("config/coordfinder/places.properties"))
             return locations.map { line ->
                 val coords = line.split("=")[1].split(",")
-                WorldBlockPos(coords[0].toInt(), coords[1].toInt(), coords[2].toInt(), coords[3])
+                RelativePosition(coords[0], coords[1], coords[2])
+//                WorldBlockPos(coords[0].toInt(), coords[1].toInt(), coords[2].toInt(), coords[3])
             }
         } catch (_: IOException) {
             // if the file doesn't exist
             return null
         }
     }
-//        SuggestionProviders.register(Utils.MyIdentifier(""))
-//        { _: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
-//            CommandSource.suggestMatching(
-//                configurableProps.map { prop -> prop.text },
-//                builder
-//            )
-//        }
+
+    val test: SuggestionProvider<ServerCommandSource> =
+        SuggestionProviders.register(Utils.MyIdentifier("coords_suggestions"))
+        { ctx: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
+            println(decomposeCoordsLocations())
+            CommandSource.suggestPositions(
+                builder!!.remaining,
+                decomposeCoordsLocations(),
+                builder,
+                CommandManager.getCommandValidator(DefaultPosArgument::parse)
+            )
+        }
 
     private fun register() {
         val commandNode = CommandManager
@@ -73,6 +86,7 @@ class Navigate {
 
         val coordsNode = CommandManager
             .argument("coords", BlockPosArgumentType.blockPos())
+            .suggests(test)
 //            .suggests(BlockPosArgumentType()::listSuggestions)
 //            .suggests { ctx, builder ->
 //                SuggestionProviders.ASK_SERVER.getSuggestions(ctx, builder)
