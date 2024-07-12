@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.server.command.CommandManager
 
+// TODO: finish this?
 class ConfigureProperty {
     init {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->

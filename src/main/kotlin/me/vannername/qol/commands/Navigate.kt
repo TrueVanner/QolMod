@@ -1,128 +1,200 @@
 package me.vannername.qol.commands
 
-//import net.vannername.qol.utils.ConfigUtils.configurableProps
 import com.mojang.brigadier.arguments.BoolArgumentType
 import com.mojang.brigadier.arguments.BoolArgumentType.getBool
+import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
-import com.mojang.brigadier.suggestion.SuggestionProvider
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import me.vannername.qol.QoLMod
 import me.vannername.qol.utils.PlayerUtils.getConfig
 import me.vannername.qol.utils.PlayerUtils.startNavigation
 import me.vannername.qol.utils.PlayerUtils.stopNavigation
 import me.vannername.qol.utils.Utils
 import me.vannername.qol.utils.Utils.appendCommandSuggestion
 import me.vannername.qol.utils.WorldBlockPos
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.command.CommandSource
-import net.minecraft.command.CommandSource.RelativePosition
 import net.minecraft.command.argument.BlockPosArgumentType
-import net.minecraft.command.argument.DefaultPosArgument
-import net.minecraft.command.suggestion.SuggestionProviders
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Path
 
-
-class Navigate {
+object Navigate : CommandHandlerTemplate("navigate") {
 
     // TODO: fix compass location
-    // TODO: add suggestions for coordinates
     // TODO: tests
 
-    init {
-        register()
+    override fun init() {
+        super.init()
         detectNavigationEnd()
     }
 
+    private val globalCoordsSuggestionProvider = object : SuggestionProviderKey {
+        override fun key(): Identifier = Utils.MyIdentifier("coords_suggestions_global")
+    }
+
+    private var suggestionProviderKeysPerWorld:
+            Map<Identifier, SuggestionProviderKeyForWorld> = mutableMapOf()
+
+    private class SuggestionProviderKeyForWorld(val worldID: Identifier) : SuggestionProviderKey {
+        override fun key(): Identifier = this.worldID
+    }
+
+    private enum class NavigateCommandNodeKeys : CommandNodeKey {
+        CONTINUE,
+        COORDS,
+        IS_DIRECT,
+        STOP;
+
+        override fun key(): String = this.name
+    }
+
     /**
-     * Only works if the server has the [Coord Finder](https://modrinth.com/mod/coord-finder/version/fabric-1.20.6-1.1.0) mod installed.
-     * Transforms the positions specified in the config file of the mod to the list of positions in the current mod's format.
-     *
-     * @return the list of the positions on the server stored in positions.properties
+     * My initial idea was to create a way to send a suggestion
+     * that is different from the text that will be placed when the
+     * suggestion is selected. This has failed, and now the only purpose
+     * of this function is to simplify suggestion code.
      */
-    private fun decomposeCoordsLocations(): List<RelativePosition>? {
-        try {
-            val locations = Files.readAllLines(Path.of("config/coordfinder/places.properties"))
-            return locations.map { line ->
-                val coords = line.split("=")[1].split(",")
-                RelativePosition(coords[0], coords[1], coords[2])
-//                WorldBlockPos(coords[0].toInt(), coords[1].toInt(), coords[2].toInt(), coords[3])
-            }
-        } catch (_: IOException) {
-            // if the file doesn't exist
-            return null
+//    fun coordSuggestions(worldID: Identifier?, builder: SuggestionsBuilder):
+//            CompletableFuture<Suggestions> {
+//        for (location in decomposeCoordsLocations(worldID)) {
+//            builder.suggest(location.key)
+//        }
+//        return builder.buildFuture()
+//    }
+
+    /**
+     * Stores the coordinates saved on the server.
+     */
+    object SavedCoordinates {
+        private var coordinates: Map<String, WorldBlockPos> = Utils.decomposeCoordsLocations()
+
+        /**
+         * Gets the list of all registered coordinates.
+         * Filters by world if worldID is specified.
+         */
+        fun get(worldID: Identifier? = null): Map<String, WorldBlockPos> {
+            val toReturn = coordinates
+            if (worldID == null) return toReturn
+            return toReturn.filter { it.value.worldID == worldID.toString() }
+        }
+
+        /**
+         * Updates the list of all registered coordinates.
+         */
+        fun update() {
+            coordinates = Utils.decomposeCoordsLocations()
+        }
+
+        fun getNames(worldID: Identifier? = null): List<String> {
+//        return origin.values.map { it.getString(false) }
+            return get(worldID).keys.map { "\"$it\"" }
+        }
+
+        /**
+         * Gets a coordinate by name in a "value" format.
+         */
+        fun getByName(name: String): WorldBlockPos {
+            return coordinates[name.slice(1..name.length - 2)]
+                ?: throw IllegalArgumentException("No such coordinate found")
         }
     }
 
-    val test: SuggestionProvider<ServerCommandSource> =
-        SuggestionProviders.register(Utils.MyIdentifier("coords_suggestions"))
-        { ctx: CommandContext<CommandSource>, builder: SuggestionsBuilder? ->
-            println(decomposeCoordsLocations())
-            CommandSource.suggestPositions(
-                builder!!.remaining,
-                decomposeCoordsLocations(),
-                builder,
-                CommandManager.getCommandValidator(DefaultPosArgument::parse)
+    private var suggestionProvidersPerWorldLoaded = false
+
+    private fun loadSuggestionProvidersPerWorld() {
+        if (!suggestionProvidersPerWorldLoaded) {
+            for (worldID in QoLMod.serverWorldIDs) {
+                suggestionProviderKeysPerWorld += worldID to SuggestionProviderKeyForWorld(worldID)
+                registerSuggestionProvider(suggestionProviderKeysPerWorld[worldID]!!)
+                { _: CommandContext<CommandSource>, builder: SuggestionsBuilder ->
+                    CommandSource.suggestMatching(
+                        SavedCoordinates.getNames(worldID), builder
+                    )
+                }
+            }
+            suggestionProvidersPerWorldLoaded = true
+        }
+    }
+
+    override fun registerSuggestionProviders() {
+        registerSuggestionProvider(globalCoordsSuggestionProvider)
+        { ctx: CommandContext<CommandSource>, builder: SuggestionsBuilder ->
+            CommandSource.suggestMatching(
+                SavedCoordinates.getNames(), builder
             )
         }
+    }
 
-    private fun register() {
-        val commandNode = CommandManager
-            .literal("navigate")
-            .build()
+    override fun registerCommandNodes() {
+        super.registerCommandNodes()
 
-        val continueNode = CommandManager
+        CommandManager
             .literal("continue")
             .executes(::continueNavigation)
-            .build()
+            .register(NavigateCommandNodeKeys.CONTINUE)
 
-        val coordsNode = CommandManager
+        CommandManager
             .argument("coords", BlockPosArgumentType.blockPos())
-            .suggests(test)
-//            .suggests(BlockPosArgumentType()::listSuggestions)
-//            .suggests { ctx, builder ->
-//                SuggestionProviders.ASK_SERVER.getSuggestions(ctx, builder)
-//            }
-            .executes { ctx ->
-                startNavigation(
-                    BlockPosArgumentType.getBlockPos(ctx, "coords"), false, ctx
-                )
+            // if sent by the player, only coordinates in the local world
+            // are autofilled. Otherwise, all coordinates.
+            .suggests { ctx, builder ->
+                loadSuggestionProvidersPerWorld()
+                SavedCoordinates.update()
+                val player = ctx.source.player
+                if (player != null) {
+                    suggestionProviderKeysPerWorld[player.world.registryKey.value]!!
+                        .getSuggestions(ctx, builder)
+                } else {
+                    globalCoordsSuggestionProvider.getSuggestions(ctx, builder)
+                }
             }
-            .build()
+            .executes { ctx ->
+                val coords = try {
+                    BlockPosArgumentType.getBlockPos(ctx, "coords")
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    SavedCoordinates.getByName(StringArgumentType.getString(ctx, "coords"))
+                }
+                startNavigation(coords, false, ctx)
+            }
+            .register(NavigateCommandNodeKeys.COORDS)
 
-        val isDirectNode = CommandManager
+        CommandManager
             .argument("isDirect", BoolArgumentType.bool())
             .suggests(BoolArgumentType.bool()::listSuggestions)
             .executes { ctx ->
-                startNavigation(
-                    BlockPosArgumentType.getBlockPos(ctx, "coords"), getBool(ctx, "isDirect"), ctx
-                )
+                val coords = try {
+                    BlockPosArgumentType.getBlockPos(ctx, "coords")
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    SavedCoordinates.getByName(StringArgumentType.getString(ctx, "coords"))
+                }
+                startNavigation(coords, getBool(ctx, "isDirect"), ctx)
             }
-            .build()
+            .register(NavigateCommandNodeKeys.IS_DIRECT)
 
-        val stopNode = CommandManager
+        CommandManager
             .literal("stop")
             .executes(::stopNavigation)
-            .build()
+            .register(NavigateCommandNodeKeys.STOP)
+    }
 
+    override fun commandStructure() {
+        ROOT.addChildren(
+            NavigateCommandNodeKeys.COORDS,
+            NavigateCommandNodeKeys.STOP,
+            NavigateCommandNodeKeys.CONTINUE
+        )
 
-        CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
-            dispatcher.root.addChild(commandNode)
-
-            commandNode.addChild(coordsNode)
-            commandNode.addChild(stopNode)
-            commandNode.addChild(continueNode)
-
-            coordsNode.addChild(isDirectNode)
-        }
+        NavigateCommandNodeKeys.COORDS.addChild(
+            NavigateCommandNodeKeys.IS_DIRECT
+        )
     }
 
     /**

@@ -21,75 +21,107 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.util.*
 
-class SkipDayNight {
+object SkipDayNight : CommandHandlerTemplate("") {
 
     // TODO: resolve errors with skip force
-    // TODO: Add suggestions for duration
-    init {
+
+    override fun init() {
+        super.init()
+
         Mode.NIGHT.opposite = Mode.DAY
         Mode.DAY.opposite = Mode.NIGHT
-        register()
+
         detectTimeChange()
     }
 
-    private fun register() {
+//    private enum class SkipDayNightSuggestionProviderKeys : SuggestionProviderKey {
+//
+//        // TODO: Add suggestions for duration
+//
+//        override fun name(): Identifier = Utils.MyIdentifier(this.name)
+//    }
 
+    private enum class SkipDayNightCommandNodeKeys : CommandNodeKey {
+        ROOT_SKIPDAY,
+        ROOT_SKIPNIGHT,
+        DURATION,
+        INF,
+        FORCE,
+        STATUS;
+
+        override fun key(): String = this.name
+    }
+
+    override fun registerCommandNodes() {
         fun currentMode(ctx: CommandContext<ServerCommandSource>): Mode {
             return if (ctx.input.contains("skipday")) Mode.DAY else Mode.NIGHT
         }
 
-        val skipDayNode = CommandManager
+        CommandManager
             .literal("skipday")
-            .build()
+            .register(SkipDayNightCommandNodeKeys.ROOT_SKIPDAY)
 
-        val skipNightNode = CommandManager
+        CommandManager
             .literal("skipnight")
-            .build()
+            .register(SkipDayNightCommandNodeKeys.ROOT_SKIPNIGHT)
 
-        val durationNode = CommandManager
+        CommandManager
             .argument("duration", IntegerArgumentType.integer())
 //            .suggests()
             .executes { ctx ->
                 skipPeriod(currentMode(ctx), getInteger(ctx, "duration"), false, ctx)
             }
-            .build()
+            .register(SkipDayNightCommandNodeKeys.DURATION)
 
-        val infNode = CommandManager
+        CommandManager
             .literal("inf")
             .executes { ctx ->
                 skipPeriod(currentMode(ctx), 0, true, ctx)
             }
-            .build()
+            .register(SkipDayNightCommandNodeKeys.INF)
 
-        val forceNode = CommandManager
+        CommandManager
             .literal("force")
             .executes { ctx ->
                 skipForce(currentMode(ctx), ctx)
-                1
             }
-            .build()
+            .register(SkipDayNightCommandNodeKeys.FORCE)
 
-        val statusNode = CommandManager
+        CommandManager
             .literal("status")
             .executes { ctx ->
                 showStatus(currentMode(ctx), ctx)
             }
-            .build()
+            .register(SkipDayNightCommandNodeKeys.STATUS)
+    }
 
+    override fun commandStructure() {
+        SkipDayNightCommandNodeKeys.ROOT_SKIPDAY
+            .addChildren(
+                SkipDayNightCommandNodeKeys.DURATION,
+                SkipDayNightCommandNodeKeys.INF,
+                SkipDayNightCommandNodeKeys.FORCE,
+                SkipDayNightCommandNodeKeys.STATUS
+            )
+
+        SkipDayNightCommandNodeKeys.ROOT_SKIPNIGHT
+            .addChildren(
+                SkipDayNightCommandNodeKeys.DURATION,
+                SkipDayNightCommandNodeKeys.INF,
+                SkipDayNightCommandNodeKeys.FORCE,
+                SkipDayNightCommandNodeKeys.STATUS
+            )
+    }
+
+    override fun register() {
+        registerSuggestionProviders()
+        registerCommandNodes()
 
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
-            dispatcher.root.addChild(skipNightNode)
-            dispatcher.root.addChild(skipDayNode)
+            dispatcher.root.addChild(SkipDayNightCommandNodeKeys.ROOT_SKIPDAY.getNode())
+            dispatcher.root.addChild(SkipDayNightCommandNodeKeys.ROOT_SKIPNIGHT.getNode())
 
-            skipNightNode.addChild(durationNode)
-            skipNightNode.addChild(infNode)
-            skipNightNode.addChild(forceNode)
-            skipNightNode.addChild(statusNode)
-
-            skipDayNode.addChild(durationNode)
-            skipDayNode.addChild(infNode)
-            skipDayNode.addChild(forceNode)
-            skipDayNode.addChild(statusNode)
+            commandStructure()
         }
     }
 
@@ -98,6 +130,7 @@ class SkipDayNight {
      * This method is called every tick.
      */
     private fun detectTimeChange() {
+        println("detecting")
         // 12000 (10:00) Beginning of the Minecraft sunset.
         // Villagers go to their beds and sleep.
         // 23460 (19:33) In clear weather, beds can no longer be used.
@@ -182,10 +215,10 @@ class SkipDayNight {
     }
 
 
-    private fun skipForce(mode: Mode, ctx: CommandContext<ServerCommandSource>) {
+    private fun skipForce(mode: Mode, ctx: CommandContext<ServerCommandSource>): Int {
         if (mode.opposite!!.skipForce) {
             ctx.sendCommandError("/skip${mode.name.lowercase()} force has already been set.")
-            return
+            return 0
         }
 
         mode.skipForce = true
@@ -195,6 +228,8 @@ class SkipDayNight {
             Text.literal("One ${mode.name.lowercase()} has been force-skipped.")
                 .formatted(Formatting.AQUA)
         )
+
+        return 1
     }
 
     /**

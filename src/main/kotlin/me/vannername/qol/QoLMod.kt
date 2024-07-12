@@ -4,7 +4,6 @@ import me.fzzyhmstrs.fzzy_config.api.ConfigApi
 import me.vannername.qol.commands.EnderChestOpener
 import me.vannername.qol.commands.Navigate
 import me.vannername.qol.commands.SkipDayNight
-import me.vannername.qol.commands.Testing
 import me.vannername.qol.config.PlayerConfig
 import me.vannername.qol.config.ServerConfig
 import me.vannername.qol.gui.MainGUI
@@ -34,6 +33,9 @@ object QoLMod : ModInitializer {
     var defaultWorld: ServerWorld? = null
 
     @JvmField
+    var serverWorldIDs: List<Identifier> = listOf()
+
+    @JvmField
     var playerConfigs: Map<UUID, PlayerConfig> = mutableMapOf()
 
     val serverConfig = ConfigApi.registerAndLoadConfig({ ServerConfig() })
@@ -43,13 +45,13 @@ object QoLMod : ModInitializer {
 
 
     override fun onInitialize() {
-        EnderChestOpener()
+        EnderChestOpener.init()
 //        ConfigureProperty()
-        Testing()
+//        Testing()
         MainGUI()
-        Navigate()
-        SkipDayNight()
-        
+        Navigate.init()
+        SkipDayNight.init()
+
 //		MidnightConfig.init(MOD_ID, MidnightConfigExample::class.java)
 
         ServerPlayConnectionEvents.JOIN.register { networkHandler, _, _ ->
@@ -66,6 +68,9 @@ object QoLMod : ModInitializer {
 
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             defaultWorld = server.getWorld(RegistryKey.of(RegistryKeys.WORLD, Identifier("overworld")))!!
+            for (world in server.worlds) {
+                serverWorldIDs += world.registryKey.value
+            }
         }
     }
 }

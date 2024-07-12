@@ -38,10 +38,21 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos
         } else throw RuntimeException("Attempted to compute distance across different worlds")
     }
 
+    fun getString(includeWorld: Boolean = false): String {
+        return (if (includeWorld) worldID else "") + "$x $y $z"
+    }
+
     /**
      * Checks if the world is equal to the world of this WorldBlockPos.
      */
     fun isInSameWorld(world: World): Boolean {
         return worldID == world.registryKey.value.toString()
+    }
+
+    /**
+     * Checks if the world is equal to the world of this WorldBlockPos.
+     */
+    fun isInSameWorld(world: Identifier): Boolean {
+        return worldID == world.toString()
     }
 }
