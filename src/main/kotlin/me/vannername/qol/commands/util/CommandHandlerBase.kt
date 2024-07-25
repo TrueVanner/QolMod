@@ -10,7 +10,6 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import com.mojang.brigadier.tree.ArgumentCommandNode
 import com.mojang.brigadier.tree.CommandNode
 import com.mojang.brigadier.tree.LiteralCommandNode
-import me.vannername.qol.QoLMod
 import me.vannername.qol.commands.util.CommandHandlerBase.CommandNodeKey
 import me.vannername.qol.utils.Utils
 import me.vannername.qol.utils.Utils.appendCommandSuggestion
@@ -206,11 +205,7 @@ abstract class CommandHandlerBase<S : CommandSource>(val commandName: String, va
      * if there are several nodes.
      */
     protected open fun commandStructure() {
-        try {
-            ROOT.addChild(HELP)
-        } catch (e: NullPointerException) {
-            QoLMod.logger.warn("Warning: help node not defined for command /${commandName}")
-        }
+        ROOT.addChild(HELP)
     }
 
     /**

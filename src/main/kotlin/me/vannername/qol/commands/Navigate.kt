@@ -9,7 +9,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import me.vannername.qol.QoLMod
 import me.vannername.qol.commands.util.CommandHandlerBase
 import me.vannername.qol.utils.PlayerUtils.getConfig
-import me.vannername.qol.utils.PlayerUtils.simpleMessage
+import me.vannername.qol.utils.PlayerUtils.sendSimpleMessage
 import me.vannername.qol.utils.PlayerUtils.startNavigation
 import me.vannername.qol.utils.PlayerUtils.stopNavigation
 import me.vannername.qol.utils.Utils
@@ -211,7 +211,7 @@ object Navigate : CommandHandlerBase<ServerCommandSource>("navigate", EnvType.SE
     private fun startNavigation(position: BlockPos, isDirect: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
         val p = ctx.source.playerOrThrow
         val wPos = WorldBlockPos(position, p.world.registryKey)
-        p.simpleMessage("Distance to destination: ${wPos.getDistance(p.blockPos)}", Formatting.AQUA)
+        p.sendSimpleMessage("Distance to destination: ${wPos.getDistance(p.blockPos)}", Formatting.AQUA)
         p.startNavigation(wPos, isDirect)
         return 1
     }
@@ -223,7 +223,7 @@ object Navigate : CommandHandlerBase<ServerCommandSource>("navigate", EnvType.SE
     @Throws(CommandSyntaxException::class)
     private fun stopNavigation(ctx: CommandContext<ServerCommandSource>): Int {
         val p = ctx.source.playerOrThrow
-        p.simpleMessage("Navigation stopped", Formatting.AQUA)
+        p.sendSimpleMessage("Navigation stopped", Formatting.AQUA)
         p.stopNavigation()
         return 1
     }
@@ -269,7 +269,7 @@ object Navigate : CommandHandlerBase<ServerCommandSource>("navigate", EnvType.SE
 
                     if (currentPos.equals(target) || (!navData.isDirect && target.isWithinDistance(currentPos, 5.0))) {
                         p.stopNavigation()
-                        p.simpleMessage("Navigation stopped.", Formatting.AQUA)
+                        p.sendSimpleMessage("Navigation stopped.", Formatting.AQUA)
                     }
                 }
             }

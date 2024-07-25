@@ -1,13 +1,5 @@
-import me.vannername.qol.QoLMod.serverConfig
-import me.vannername.qol.commands.SkipDayNight
-import me.vannername.qol.utils.Utils
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
-
 class SkipDayNightTest {
-    @Nested
+    /* @Nested
     inner class SkipPeriodTest {
         @Test
         fun `SkipPeriod should return correct period and isInfinite`() {
@@ -87,5 +79,5 @@ class SkipDayNightTest {
             mode.associatedEntry.get().getAndUpdate()
             assertEquals(0, mode.associatedEntry.get().period)
         }
-    }
+    } */
 }

@@ -27,18 +27,18 @@ object Utils {
         this.sendMessage(toSend)
     }
 
+    fun CommandContext<*>.sendCommandSuccess(text: String): Int {
+        val toSend = Text.literal(text).formatted(Formatting.GREEN)
+        this.sendMessage(toSend)
+        return 1
+    }
+
     fun CommandContext<*>.sendCommandError(text: String): Int {
         val toSend = Text.literal(text).formatted(Formatting.RED)
         (this.source as? ServerCommandSource)?.sendError(toSend)
         (this.source as? FabricClientCommandSource)?.sendError(toSend)
         return 0
     }
-
-//    fun CommandContext<FabricClientCommandSource>.simpleMessage(text: String, formatting: Formatting? = null) {
-//        val toSend = Text.literal(text)
-//        if (formatting != null) toSend.formatted(formatting)
-//        this.source.player.sendMessage(toSend)
-//    }
 
     /**
      * Transforms the Text by coloring the specified segments according to the specified colors.

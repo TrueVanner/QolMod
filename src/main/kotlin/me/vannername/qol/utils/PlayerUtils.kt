@@ -2,9 +2,11 @@ package me.vannername.qol.utils
 
 import me.vannername.qol.GlobalMixinVariables
 import me.vannername.qol.QoLMod
+import me.vannername.qol.commands.TeleportToSpawn
 import me.vannername.qol.config.PlayerConfig
 import me.vannername.qol.utils.Utils.multiColored
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import kotlin.math.abs
@@ -74,27 +76,27 @@ object PlayerUtils {
     /**
      * Simplifies sending a simple text message with basic formatting.
      */
-    fun PlayerEntity.simpleMessage(text: String, formatting: Formatting? = null, overlay: Boolean = false) {
+    fun PlayerEntity.sendSimpleMessage(text: String, formatting: Formatting? = null, overlay: Boolean = false) {
         val toSend = Text.literal(text)
         if (formatting != null) toSend.formatted(formatting)
-        this.sendMessage(toSend, overlay)
+        sendMessage(toSend, overlay)
     }
 
     fun PlayerEntity.startAFK() {
-        this.getConfig().isAFK = true
-        this.isInvulnerable = true
+        getConfig().isAFK = true
+        isInvulnerable = true
         GlobalMixinVariables.setPlayerIsInvulnerable(true)
-        this.simpleMessage("You have entered AFK mode.", Formatting.RED)
+        sendSimpleMessage("You have entered AFK mode.", Formatting.RED)
     }
 
     fun PlayerEntity.stopAFK() {
-        this.getConfig().isAFK = false
+        getConfig().isAFK = false
         Thread {
             Thread.sleep(3 * 1000)
-            this.isInvulnerable = false
+            isInvulnerable = false
             GlobalMixinVariables.setPlayerIsInvulnerable(false)
         }.start()
-        this.simpleMessage("You are no longer AFK!", Formatting.GREEN)
+        sendSimpleMessage("You are no longer AFK!", Formatting.GREEN)
     }
 
     fun PlayerEntity.maintainAFK() {
@@ -112,12 +114,45 @@ object PlayerUtils {
      * Otherwise, navigation is stopped if the player is within 3 blocks of the target.
      */
     fun PlayerEntity.startNavigation(to: WorldBlockPos, isDirect: Boolean) {
-        this.getConfig().navData.isNavigating = true
-        this.getConfig().navData =
+        getConfig().navData.isNavigating = true
+        getConfig().navData =
             PlayerConfig.PlayerNavigationData(true, to, isDirect)
     }
 
     fun PlayerEntity.stopNavigation() {
-        this.getConfig().navData.isNavigating = false
+        getConfig().navData.isNavigating = false
+    }
+
+    fun ServerPlayerEntity.checkTeleportRequirements(): TeleportToSpawn.TeleportData {
+        val errorMessage = when {
+            !isOnGround -> "You can't teleport while in the air!"
+            getConfig().isAFK -> "You can't teleport while AFK!"
+            vehicle != null -> "You can't teleport while in a vehicle!"
+            else -> null
+        }
+
+        if (errorMessage != null) {
+            return TeleportToSpawn.TeleportData.Error(errorMessage)
+        }
+
+        var message: String? = null
+        val destination = spawnPointPosition
+            .takeIf { it != null && spawnPointDimension == world.registryKey }
+            ?: world.getSpawnPos().also {
+                message = "Warning: your spawn point in this world didn't exist, so you were sent to the world spawn."
+            }
+
+        // TODO check if there is enough space for the player to stay in teleport location
+//        if(world.isSpaceEmpty(this, this.boundingBox.offset(destination)))
+
+
+        // TODO: import cost calculations
+        val cost = 5
+
+        if (totalExperience < cost) {
+            return TeleportToSpawn.TeleportData.Error("You don't have enough experience to teleport!\nYour experience: $totalExperience\nRequired experience: $cost (you lack ${totalExperience - cost} points)")
+        }
+
+        return TeleportToSpawn.TeleportData.Success(WorldBlockPos(destination, world.registryKey), cost, message)
     }
 }
