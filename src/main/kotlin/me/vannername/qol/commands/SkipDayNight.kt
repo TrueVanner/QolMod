@@ -4,15 +4,18 @@ import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
+import me.fzzyhmstrs.fzzy_config.util.Walkable
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedAny
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import me.vannername.qol.QoLMod
 import me.vannername.qol.QoLMod.serverConfig
+import me.vannername.qol.commands.util.CommandHandlerBase
 import me.vannername.qol.utils.Utils
 import me.vannername.qol.utils.Utils.appendCommandSuggestion
 import me.vannername.qol.utils.Utils.multiColored
 import me.vannername.qol.utils.Utils.sendCommandError
 import me.vannername.qol.utils.Utils.sentenceCase
+import net.fabricmc.api.EnvType
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.server.command.CommandManager
@@ -21,16 +24,15 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.util.*
 
-object SkipDayNight : CommandHandlerTemplate("") {
+object SkipDayNight : CommandHandlerBase<ServerCommandSource>("", EnvType.SERVER) {
 
     // TODO: resolve errors with skip force
 
     override fun init() {
-        super.init()
-
         Mode.NIGHT.opposite = Mode.DAY
         Mode.DAY.opposite = Mode.NIGHT
 
+        super.init()
         detectTimeChange()
     }
 
@@ -66,6 +68,11 @@ object SkipDayNight : CommandHandlerTemplate("") {
             .register(SkipDayNightCommandNodeKeys.ROOT_SKIPNIGHT)
 
         CommandManager
+            .literal("help")
+            .executes(::help)
+            .register(HELP)
+
+        CommandManager
             .argument("duration", IntegerArgumentType.integer())
 //            .suggests()
             .executes { ctx ->
@@ -96,8 +103,10 @@ object SkipDayNight : CommandHandlerTemplate("") {
     }
 
     override fun commandStructure() {
+
         SkipDayNightCommandNodeKeys.ROOT_SKIPDAY
             .addChildren(
+                HELP,
                 SkipDayNightCommandNodeKeys.DURATION,
                 SkipDayNightCommandNodeKeys.INF,
                 SkipDayNightCommandNodeKeys.FORCE,
@@ -106,6 +115,7 @@ object SkipDayNight : CommandHandlerTemplate("") {
 
         SkipDayNightCommandNodeKeys.ROOT_SKIPNIGHT
             .addChildren(
+                HELP,
                 SkipDayNightCommandNodeKeys.DURATION,
                 SkipDayNightCommandNodeKeys.INF,
                 SkipDayNightCommandNodeKeys.FORCE,
@@ -114,10 +124,8 @@ object SkipDayNight : CommandHandlerTemplate("") {
     }
 
     override fun register() {
-        registerSuggestionProviders()
-        registerCommandNodes()
-
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
+
             dispatcher.root.addChild(SkipDayNightCommandNodeKeys.ROOT_SKIPDAY.getNode())
             dispatcher.root.addChild(SkipDayNightCommandNodeKeys.ROOT_SKIPNIGHT.getNode())
 
@@ -125,12 +133,19 @@ object SkipDayNight : CommandHandlerTemplate("") {
         }
     }
 
+    override fun defineHelpMessages() {
+        addPathDescriptions(
+            listOf(SkipDayNightCommandNodeKeys.ROOT_SKIPDAY, HELP) to "Displays this help message.",
+            listOf(SkipDayNightCommandNodeKeys.ROOT_SKIPNIGHT, HELP) to "Displays this help message.",
+            appendRoot = false
+        )
+    }
+
     /**
      * Detect the time change and skip the day/night if necessary.
      * This method is called every tick.
      */
     private fun detectTimeChange() {
-        println("detecting")
         // 12000 (10:00) Beginning of the Minecraft sunset.
         // Villagers go to their beds and sleep.
         // 23460 (19:33) In clear weather, beds can no longer be used.
@@ -139,8 +154,10 @@ object SkipDayNight : CommandHandlerTemplate("") {
 
         ServerTickEvents.END_WORLD_TICK.register { world ->
             try {
-                val mode = if (world.timeOfDay in 12000..23459) Mode.NIGHT else Mode.DAY
-                performSkip(mode)
+                val mode = if (world.timeOfDay % 24000 in 12000..23459) Mode.NIGHT else Mode.DAY
+                if (mode.associatedEntry.get().isSet()) {
+                    performSkip(mode)
+                }
             } catch (e: IllegalStateException) {
                 // Should only be thrown if the period is 0 and skipping is
                 // impossible; Do nothing
@@ -150,11 +167,14 @@ object SkipDayNight : CommandHandlerTemplate("") {
 
     @Throws(IllegalStateException::class)
     private fun performSkip(mode: Mode) {
-        val world = QoLMod.defaultWorld!!
         val currentValue = mode.associatedEntry.get().getAndUpdate()
+        val world = QoLMod.defaultWorld!!
 
         if (!mode.opposite!!.skipForce) {
-            world.timeOfDay = if (mode == Mode.DAY) 13000 else 0
+            // only needed because world.timeOfDay can go beyond 24000
+            val fullDays = world.timeOfDay.toInt() / 24000
+            // math
+            world.timeOfDay = (fullDays + 1) * 24000L + if (mode == Mode.DAY) 13000 else 0
             world.players.forEach {
                 it.sendMessage(
                     Text.literal("${mode.name.sentenceCase()} successfully skipped!").formatted(Formatting.AQUA)
@@ -206,7 +226,9 @@ object SkipDayNight : CommandHandlerTemplate("") {
             )
             return 0
         }
+
         mode.associatedEntry.validateAndSet(SkipPeriod(duration, isInfinite))
+
         ctx.source.sendMessage(
             Text.literal("${mode.name.sentenceCase()} skipping set to: %c{${mode.associatedEntry.get()}}")
                 .multiColored(listOf(mode.color), Utils.Colors.CYAN)
@@ -251,15 +273,17 @@ object SkipDayNight : CommandHandlerTemplate("") {
      * @param period The number of days or nights to skip.
      * @param isInfinite Whether the period is infinite or not.
      */
-    class SkipPeriod(period: Int, val isInfinite: Boolean) {
-        val period = ValidatedInt(period, 100, 0)
+    class SkipPeriod(
+        @property:ValidatedInt.Restrict(min = 0, max = 100) var period: Int,
+        val isInfinite: Boolean
+    ) : Walkable {
 
         override fun toString(): String {
-            return if (isInfinite) "Infinite" else period.get().toString()
+            return if (isInfinite) "Infinite" else period.toString()
         }
 
         fun isSet(): Boolean {
-            return period.get() != 0 || isInfinite
+            return period > 0 || isInfinite
         }
 
         /**
@@ -269,13 +293,12 @@ object SkipDayNight : CommandHandlerTemplate("") {
          * @throws IllegalStateException If the period is already 0.
          */
         fun getAndUpdate(): Int {
-            val toReturn = period.get()
-            if (isInfinite) return toReturn
+            if (isInfinite) return period
 
-            if (toReturn <= 0) throw IllegalStateException("Period is already 0")
+            if (period <= 0) throw IllegalStateException("Period is already 0")
 
-            period.validateAndSet(toReturn - 1)
-            return toReturn
+            period -= 1
+            return period
         }
     }
 }

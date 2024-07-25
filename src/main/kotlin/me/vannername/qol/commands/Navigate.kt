@@ -7,12 +7,16 @@ import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import me.vannername.qol.QoLMod
+import me.vannername.qol.commands.util.CommandHandlerBase
 import me.vannername.qol.utils.PlayerUtils.getConfig
+import me.vannername.qol.utils.PlayerUtils.simpleMessage
 import me.vannername.qol.utils.PlayerUtils.startNavigation
 import me.vannername.qol.utils.PlayerUtils.stopNavigation
 import me.vannername.qol.utils.Utils
 import me.vannername.qol.utils.Utils.appendCommandSuggestion
+import me.vannername.qol.utils.Utils.sendCommandError
 import me.vannername.qol.utils.WorldBlockPos
+import net.fabricmc.api.EnvType
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.command.CommandSource
 import net.minecraft.command.argument.BlockPosArgumentType
@@ -24,7 +28,7 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 
-object Navigate : CommandHandlerTemplate("navigate") {
+object Navigate : CommandHandlerBase<ServerCommandSource>("navigate", EnvType.SERVER) {
 
     // TODO: fix compass location
     // TODO: tests
@@ -35,14 +39,14 @@ object Navigate : CommandHandlerTemplate("navigate") {
     }
 
     private val globalCoordsSuggestionProvider = object : SuggestionProviderKey {
-        override fun key(): Identifier = Utils.MyIdentifier("coords_suggestions_global")
+        override fun key(): String = "coords-suggestions-global"
     }
 
     private var suggestionProviderKeysPerWorld:
             Map<Identifier, SuggestionProviderKeyForWorld> = mutableMapOf()
 
     private class SuggestionProviderKeyForWorld(val worldID: Identifier) : SuggestionProviderKey {
-        override fun key(): Identifier = this.worldID
+        override fun key(): String = this.worldID.path
     }
 
     private enum class NavigateCommandNodeKeys : CommandNodeKey {
@@ -112,7 +116,7 @@ object Navigate : CommandHandlerTemplate("navigate") {
             for (worldID in QoLMod.serverWorldIDs) {
                 suggestionProviderKeysPerWorld += worldID to SuggestionProviderKeyForWorld(worldID)
                 registerSuggestionProvider(suggestionProviderKeysPerWorld[worldID]!!)
-                { _: CommandContext<CommandSource>, builder: SuggestionsBuilder ->
+                { _: CommandContext<ServerCommandSource>, builder: SuggestionsBuilder ->
                     CommandSource.suggestMatching(
                         SavedCoordinates.getNames(worldID), builder
                     )
@@ -124,7 +128,7 @@ object Navigate : CommandHandlerTemplate("navigate") {
 
     override fun registerSuggestionProviders() {
         registerSuggestionProvider(globalCoordsSuggestionProvider)
-        { ctx: CommandContext<CommandSource>, builder: SuggestionsBuilder ->
+        { ctx: CommandContext<ServerCommandSource>, builder: SuggestionsBuilder ->
             CommandSource.suggestMatching(
                 SavedCoordinates.getNames(), builder
             )
@@ -177,7 +181,7 @@ object Navigate : CommandHandlerTemplate("navigate") {
                 }
                 startNavigation(coords, getBool(ctx, "isDirect"), ctx)
             }
-            .register(NavigateCommandNodeKeys.IS_DIRECT)
+            .register(NavigateCommandNodeKeys.IS_DIRECT, required = false)
 
         CommandManager
             .literal("stop")
@@ -186,6 +190,8 @@ object Navigate : CommandHandlerTemplate("navigate") {
     }
 
     override fun commandStructure() {
+        super.commandStructure()
+
         ROOT.addChildren(
             NavigateCommandNodeKeys.COORDS,
             NavigateCommandNodeKeys.STOP,
@@ -204,7 +210,9 @@ object Navigate : CommandHandlerTemplate("navigate") {
     @Throws(CommandSyntaxException::class)
     private fun startNavigation(position: BlockPos, isDirect: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
         val p = ctx.source.playerOrThrow
-        p.startNavigation(WorldBlockPos(position, p.world.registryKey), isDirect)
+        val wPos = WorldBlockPos(position, p.world.registryKey)
+        p.simpleMessage("Distance to destination: ${wPos.getDistance(p.blockPos)}", Formatting.AQUA)
+        p.startNavigation(wPos, isDirect)
         return 1
     }
 
@@ -215,6 +223,7 @@ object Navigate : CommandHandlerTemplate("navigate") {
     @Throws(CommandSyntaxException::class)
     private fun stopNavigation(ctx: CommandContext<ServerCommandSource>): Int {
         val p = ctx.source.playerOrThrow
+        p.simpleMessage("Navigation stopped", Formatting.AQUA)
         p.stopNavigation()
         return 1
     }
@@ -227,18 +236,10 @@ object Navigate : CommandHandlerTemplate("navigate") {
         val p = ctx.source.playerOrThrow
         val navData = p.getConfig().navData
         if (navData.reached) {
-            p.sendMessage(
-                Text.literal("You haven't yet started navigating or have already reached your destination")
-                    .formatted(Formatting.RED)
-            )
-            return 0
+            return ctx.sendCommandError("You haven't yet started navigating or have already reached your destination")
         }
         if (!navData.target.get().isInSameWorld(p.world)) {
-            p.sendMessage(
-                Text.literal("You are not in the same world as your destination.")
-                    .formatted(Formatting.RED)
-            )
-            return 0
+            return ctx.sendCommandError("You are not in the same world as your destination.")
         }
         p.startNavigation(navData.target.get(), navData.isDirect)
         return 1
@@ -268,7 +269,7 @@ object Navigate : CommandHandlerTemplate("navigate") {
 
                     if (currentPos.equals(target) || (!navData.isDirect && target.isWithinDistance(currentPos, 5.0))) {
                         p.stopNavigation()
-                        p.sendMessage(Text.literal("Navigation stopped.").formatted(Formatting.AQUA))
+                        p.simpleMessage("Navigation stopped.", Formatting.AQUA)
                     }
                 }
             }
@@ -284,6 +285,18 @@ object Navigate : CommandHandlerTemplate("navigate") {
             Text.literal("Navigation paused due to changing dimensions. Use ")
                 .appendCommandSuggestion("/navigate continue")
                 .append(" to continue when you get back.").formatted(Formatting.YELLOW)
+        )
+    }
+
+    override fun defineHelpMessages() {
+        super.defineHelpMessages()
+
+        addPathDescriptions(
+            listOf(NavigateCommandNodeKeys.STOP) to "Stops navigation.",
+            listOf(
+                NavigateCommandNodeKeys.COORDS,
+                NavigateCommandNodeKeys.IS_DIRECT
+            ) to "Starts navigation to the specified location. If direct, navigation will only be aborted when the player gets to the exact specified block; otherwise, it's aborted when the player gets within a 3x3 area around the specified location.",
         )
     }
 }

@@ -1,6 +1,7 @@
 package me.vannername.qol
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
+import me.vannername.qol.commands.AFKSetter
 import me.vannername.qol.commands.EnderChestOpener
 import me.vannername.qol.commands.Navigate
 import me.vannername.qol.commands.SkipDayNight
@@ -13,6 +14,7 @@ import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
+import net.minecraft.client.MinecraftClient
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.world.ServerWorld
@@ -45,18 +47,22 @@ object QoLMod : ModInitializer {
 
 
     override fun onInitialize() {
-        EnderChestOpener.init()
-//        ConfigureProperty()
-//        Testing()
         MainGUI()
+        EnderChestOpener.init()
         Navigate.init()
         SkipDayNight.init()
+        AFKSetter.init()
 
 //		MidnightConfig.init(MOD_ID, MidnightConfigExample::class.java)
 
         ServerPlayConnectionEvents.JOIN.register { networkHandler, _, _ ->
             val uuid = networkHandler.player.uuid
             playerConfigs += uuid to ConfigApi.registerAndLoadConfig({ PlayerConfig(uuid) })
+            GlobalMixinVariables.setPlayerEnteredServer(true)
+        }
+
+        ServerPlayConnectionEvents.DISCONNECT.register { networkHander, _ ->
+            GlobalMixinVariables.setPlayerEnteredServer(false)
         }
 
         ServerTickEvents.END_WORLD_TICK.register { world ->
@@ -67,10 +73,14 @@ object QoLMod : ModInitializer {
         }
 
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
-            defaultWorld = server.getWorld(RegistryKey.of(RegistryKeys.WORLD, Identifier("overworld")))!!
+            defaultWorld = server.getWorld(RegistryKey.of(RegistryKeys.WORLD, Identifier.of("overworld")))!!
             for (world in server.worlds) {
                 serverWorldIDs += world.registryKey.value
             }
         }
+    }
+
+    fun worldLoaded(): Boolean {
+        return MinecraftClient.getInstance().player != null && defaultWorld != null
     }
 }

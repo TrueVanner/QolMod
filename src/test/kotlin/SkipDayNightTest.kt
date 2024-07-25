@@ -12,7 +12,7 @@ class SkipDayNightTest {
         @Test
         fun `SkipPeriod should return correct period and isInfinite`() {
             val skipPeriod = SkipDayNight.SkipPeriod(5, true)
-            assertEquals(5, skipPeriod.period.get())
+            assertEquals(5, skipPeriod.period)
             assertTrue(skipPeriod.isInfinite)
         }
 
@@ -20,14 +20,14 @@ class SkipDayNightTest {
         fun `getAndUpdate should decrement period by 1 if not infinite`() {
             val skipPeriod = SkipDayNight.SkipPeriod(5, false)
             assertEquals(5, skipPeriod.getAndUpdate())
-            assertEquals(4, skipPeriod.period.get())
+            assertEquals(4, skipPeriod.period)
         }
 
         @Test
         fun `getAndUpdate should not decrement period if infinite`() {
             val skipPeriod = SkipDayNight.SkipPeriod(5, true)
             assertEquals(5, skipPeriod.getAndUpdate())
-            assertEquals(5, skipPeriod.period.get())
+            assertEquals(5, skipPeriod.period)
         }
 
         @Test
@@ -72,20 +72,20 @@ class SkipDayNightTest {
             serverConfig.skippingSettings.daysToSkip.validateAndSet(SkipDayNight.SkipPeriod(5, false))
             mode.associatedEntry.get().getAndUpdate()
             mode.associatedEntry.get().getAndUpdate()
-            assertEquals(3, mode.associatedEntry.get().period.get())
+            assertEquals(3, mode.associatedEntry.get().period)
 
             serverConfig.skippingSettings.daysToSkip.validateAndSet(SkipDayNight.SkipPeriod(10, true))
-            assertEquals(10, mode.associatedEntry.get().period.get())
+            assertEquals(10, mode.associatedEntry.get().period)
 
             serverConfig.skippingSettings.daysToSkip.validateAndSet(SkipDayNight.SkipPeriod(0, false))
-            assertEquals(0, mode.associatedEntry.get().period.get())
+            assertEquals(0, mode.associatedEntry.get().period)
             assertThrows(IllegalStateException::class.java) {
                 mode.associatedEntry.get().getAndUpdate()
             }
 
             serverConfig.skippingSettings.daysToSkip.validateAndSet(SkipDayNight.SkipPeriod(0, true))
             mode.associatedEntry.get().getAndUpdate()
-            assertEquals(0, mode.associatedEntry.get().period.get())
+            assertEquals(0, mode.associatedEntry.get().period)
         }
     }
 }

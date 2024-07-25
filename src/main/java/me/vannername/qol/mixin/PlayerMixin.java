@@ -5,20 +5,17 @@ import me.vannername.qol.QoLMod;
 import me.vannername.qol.config.PlayerConfig;
 import me.vannername.qol.utils.PlayerUtils;
 import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.awt.*;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerMixin extends LivingEntityMixin {
@@ -37,7 +34,7 @@ public abstract class PlayerMixin extends LivingEntityMixin {
         if (data.getSendCoordinatesOfDeath()) {
             p.sendMessage(Text.literal("You died at: ")
                     .append("%1$d %2$d %3$d".formatted((int) p.getX(), (int) p.getY(), (int) p.getZ()))
-                    .withColor(Color.RED.getRGB())
+                    .formatted(Formatting.RED)
             );
         }
     }
@@ -54,6 +51,6 @@ public abstract class PlayerMixin extends LivingEntityMixin {
 
     //    @Inject(method = "<init>", at = @At(value = "TAIL"))
     public void alterHealth(World world, BlockPos pos, float yaw, GameProfile gameProfile, CallbackInfo ci) {
-        ((PlayerEntity) (Object) this).getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).addPersistentModifier(new EntityAttributeModifier("thisnamedosentmatter", -15, EntityAttributeModifier.Operation.ADD_VALUE));
+//        ((PlayerEntity) (Object) this).getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).addPersistentModifier(new EntityAttributeModifier("thisnamedosentmatter", -15, EntityAttributeModifier.Operation.ADD_VALUE));
     }
 }

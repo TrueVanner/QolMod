@@ -1,10 +1,12 @@
 package me.vannername.qol.utils
 
+import me.vannername.qol.GlobalMixinVariables
 import me.vannername.qol.QoLMod
 import me.vannername.qol.config.PlayerConfig
 import me.vannername.qol.utils.Utils.multiColored
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import kotlin.math.abs
 
 object PlayerUtils {
@@ -69,7 +71,33 @@ object PlayerUtils {
         return QoLMod.playerConfigs[uuid]!!
     }
 
+    /**
+     * Simplifies sending a simple text message with basic formatting.
+     */
+    fun PlayerEntity.simpleMessage(text: String, formatting: Formatting? = null, overlay: Boolean = false) {
+        val toSend = Text.literal(text)
+        if (formatting != null) toSend.formatted(formatting)
+        this.sendMessage(toSend, overlay)
+    }
+
     fun PlayerEntity.startAFK() {
+        this.getConfig().isAFK = true
+        this.isInvulnerable = true
+        GlobalMixinVariables.setPlayerIsInvulnerable(true)
+        this.simpleMessage("You have entered AFK mode.", Formatting.RED)
+    }
+
+    fun PlayerEntity.stopAFK() {
+        this.getConfig().isAFK = false
+        Thread {
+            Thread.sleep(3 * 1000)
+            this.isInvulnerable = false
+            GlobalMixinVariables.setPlayerIsInvulnerable(false)
+        }.start()
+        this.simpleMessage("You are no longer AFK!", Formatting.GREEN)
+    }
+
+    fun PlayerEntity.maintainAFK() {
 
     }
 

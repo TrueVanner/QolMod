@@ -92,7 +92,7 @@ object QoLModClient : ClientModInitializer {
 
         Renderer2d.renderTexture(
             matrixStack,
-            Identifier("textures/item/compass_${getCompassTextureID(angle)}.png"),
+            Identifier.of("textures/item/compass_${getCompassTextureID(angle)}.png"),
             100.0,
             100.0,
             16.0,

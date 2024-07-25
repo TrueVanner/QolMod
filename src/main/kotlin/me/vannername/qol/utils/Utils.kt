@@ -2,6 +2,7 @@ package me.vannername.qol.utils
 
 import com.mojang.brigadier.context.CommandContext
 import me.vannername.qol.QoLMod
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
@@ -14,14 +15,30 @@ import java.util.regex.Pattern
 
 object Utils {
     // shortcuts.
-    fun CommandContext<ServerCommandSource>.simpleMessage(text: String) {
-        this.source.sendMessage(Text.literal(text))
+
+    fun CommandContext<*>.sendMessage(text: Text) {
+        (this.source as? ServerCommandSource)?.sendMessage(text)
+        (this.source as? FabricClientCommandSource)?.player?.sendMessage(text)
     }
 
-    fun CommandContext<ServerCommandSource>.sendCommandError(text: String): Int {
-        this.source.sendError(Text.literal(text).formatted(Formatting.RED))
+    fun CommandContext<*>.sendSimpleMessage(text: String, formatting: Formatting? = null) {
+        val toSend = Text.literal(text)
+        if (formatting != null) toSend.formatted(formatting)
+        this.sendMessage(toSend)
+    }
+
+    fun CommandContext<*>.sendCommandError(text: String): Int {
+        val toSend = Text.literal(text).formatted(Formatting.RED)
+        (this.source as? ServerCommandSource)?.sendError(toSend)
+        (this.source as? FabricClientCommandSource)?.sendError(toSend)
         return 0
     }
+
+//    fun CommandContext<FabricClientCommandSource>.simpleMessage(text: String, formatting: Formatting? = null) {
+//        val toSend = Text.literal(text)
+//        if (formatting != null) toSend.formatted(formatting)
+//        this.source.player.sendMessage(toSend)
+//    }
 
     /**
      * Transforms the Text by coloring the specified segments according to the specified colors.
@@ -102,7 +119,7 @@ object Utils {
         GRAY(Color.GRAY)
     }
 
-    class MyIdentifier(id: String) : Identifier(QoLMod.MOD_ID, id)
+    fun MyIdentifier(id: String): Identifier = Identifier.of(QoLMod.MOD_ID, id)
 
     fun String.sentenceCase(): String {
         return this[0].uppercase() + this.substring(1).lowercase()

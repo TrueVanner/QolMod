@@ -1,7 +1,7 @@
 plugins {
     id 'fabric-loom' version '1.6-SNAPSHOT'
     id 'maven-publish'
-    id "org.jetbrains.kotlin.jvm" version "1.9.23"
+    id "org.jetbrains.kotlin.jvm" version "2.0.0"
 }
 
 version = project.mod_version
@@ -56,17 +56,15 @@ fabricApi {
 }
 
 dependencies {
-    // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
     modImplementation "eu.pb4:player-data-api:[${project.player_data_api_version}]"
     modImplementation "eu.pb4:sgui:[${project.server_gui_version}]"
-    modImplementation 'com.github.0x3C50:Renderer:master-SNAPSHOT'
+    modImplementation 'com.github.0x3C50:Renderer:bc2a9c5'
     modImplementation "maven.modrinth:fzzy-config:${project.fzzy_config_version}"
 
     implementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'

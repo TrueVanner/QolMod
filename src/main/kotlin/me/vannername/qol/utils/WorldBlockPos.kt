@@ -26,17 +26,30 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos
     )
 
     fun getWorld(server: MinecraftServer): ServerWorld {
-        return server.getWorld(RegistryKey.of(RegistryKeys.WORLD, Identifier(worldID)))!!
+        return server.getWorld(RegistryKey.of(RegistryKeys.WORLD, Identifier.of(worldID)))!!
     }
 
-    fun getDistance(l: WorldBlockPos): Double {
-        if (l.worldID == this.worldID) {
-            return sqrt(
-                (x - l.x).toDouble().pow(2) + (y - l.y).toDouble().pow(2) + (z - l.z).toDouble()
-                    .pow(2)
-            )
-        } else throw RuntimeException("Attempted to compute distance across different worlds")
+    /**
+     * Determines the distance between this position and a BlockPos in the same world.
+     */
+    fun getDistance(l: BlockPos): Double {
+        return sqrt(
+            (x - l.x).toDouble().pow(2) + (y - l.y).toDouble().pow(2) + (z - l.z).toDouble()
+                .pow(2)
+        )
     }
+
+    /**
+     * Determines the distance between this and another WorldBlockPos.
+     * @throws RuntimeException if the worlds are different.
+     */
+    fun getDistance(l: WorldBlockPos): Double {
+        if (l.worldID != this.worldID)
+            throw RuntimeException("Attempted to compute distance across different worlds")
+
+        return getDistance(l)
+    }
+
 
     fun getString(includeWorld: Boolean = false): String {
         return (if (includeWorld) worldID else "") + "$x $y $z"
