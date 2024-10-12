@@ -16,8 +16,7 @@ abstract public class AFKMouseMixin {
     private void onCursorPos(long window, double xpos, double ypos, CallbackInfo ci) {
         if (GlobalMixinVariables.playerEnteredServer()) {
             try {
-                if (AFKMixinVariables.isAFK()
-                        && !(MinecraftClient.getInstance().currentScreen instanceof GameMenuScreen)) {
+                if (AFKMixinVariables.shouldPreventInput()) {
                     ci.cancel();
                 }
             } catch (NullPointerException ignored) {
@@ -28,9 +27,21 @@ abstract public class AFKMouseMixin {
     @Inject(method = "onMouseButton", at = @At("HEAD"), cancellable = true)
     private void onClick(long window, int button, int action, int mods, CallbackInfo ci) {
         if (GlobalMixinVariables.playerEnteredServer()) {
+
+            // if the player just left the pause screen, detect it and update the variable
+            new Thread(() -> {
+                try {
+                    Thread.sleep(100);
+                    if (GlobalMixinVariables.currentScreen() == null) {
+                        AFKMixinVariables.setEnteredEscMenu(false);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+
             try {
-                if (AFKMixinVariables.isAFK()
-                        && !(MinecraftClient.getInstance().currentScreen instanceof GameMenuScreen)) {
+                if (AFKMixinVariables.shouldPreventInput()) {
                     ci.cancel();
                     AFKMixinVariables.incrementNrInputs();
                     AFKMixinVariables.prepareToOrStopAFK();

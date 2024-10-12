@@ -18,7 +18,7 @@ object Utils {
 
     fun CommandContext<*>.sendMessage(text: Text) {
         (this.source as? ServerCommandSource)?.sendMessage(text)
-        (this.source as? FabricClientCommandSource)?.player?.sendMessage(text)
+        (this.source as? FabricClientCommandSource)?.player?.sendMessage(text, false)
     }
 
     fun CommandContext<*>.sendSimpleMessage(text: String, formatting: Formatting? = null) {

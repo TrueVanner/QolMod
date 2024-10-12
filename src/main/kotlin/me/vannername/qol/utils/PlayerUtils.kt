@@ -1,14 +1,19 @@
 package me.vannername.qol.utils
 
+import me.fzzyhmstrs.fzzy_config.api.ConfigApi
 import me.vannername.qol.GlobalMixinVariables
 import me.vannername.qol.QoLMod
 import me.vannername.qol.commands.TeleportToSpawn
 import me.vannername.qol.config.PlayerConfig
 import me.vannername.qol.utils.Utils.multiColored
+import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import org.apache.logging.log4j.core.jmx.Server
+import java.util.UUID
 import kotlin.math.abs
 
 object PlayerUtils {
@@ -82,25 +87,21 @@ object PlayerUtils {
         sendMessage(toSend, overlay)
     }
 
-    fun PlayerEntity.startAFK() {
+    fun ServerPlayerEntity.startAFK() {
         getConfig().isAFK = true
+        ConfigApi.network().send(AFKPayload(true), this)
         isInvulnerable = true
-        GlobalMixinVariables.setPlayerIsInvulnerable(true)
         sendSimpleMessage("You have entered AFK mode.", Formatting.RED)
     }
 
-    fun PlayerEntity.stopAFK() {
+    // only called from the client-side code; UUID needed
+    fun ServerPlayerEntity.stopAFK() {
         getConfig().isAFK = false
         Thread {
             Thread.sleep(3 * 1000)
             isInvulnerable = false
-            GlobalMixinVariables.setPlayerIsInvulnerable(false)
         }.start()
         sendSimpleMessage("You are no longer AFK!", Formatting.GREEN)
-    }
-
-    fun PlayerEntity.maintainAFK() {
-
     }
 
     /**

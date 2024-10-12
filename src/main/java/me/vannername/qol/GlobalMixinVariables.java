@@ -2,13 +2,13 @@ package me.vannername.qol;
 
 import me.vannername.qol.config.PlayerConfig;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
 
 public abstract class GlobalMixinVariables {
     private static boolean b_playerEnteredServer = false;
     private static PlayerEntity player = null;
     private static PlayerConfig playerConfig = null;
-    private static boolean playerInvulnerable = false;
 
     public static PlayerEntity getClientPlayer() throws NullPointerException {
         if (player == null) {
@@ -24,19 +24,15 @@ public abstract class GlobalMixinVariables {
         return playerConfig;
     }
 
+    public static Screen currentScreen() {
+        return MinecraftClient.getInstance().currentScreen;
+    }
+
     public static boolean playerEnteredServer() {
         return b_playerEnteredServer;
     }
 
     public static void setPlayerEnteredServer(boolean playerEnteredServer) {
         GlobalMixinVariables.b_playerEnteredServer = playerEnteredServer;
-    }
-
-    public static boolean playerIsInvulnerable() {
-        return playerInvulnerable;
-    }
-
-    public static void setPlayerIsInvulnerable(boolean playerInvulnerable) {
-        GlobalMixinVariables.playerInvulnerable = playerInvulnerable;
     }
 }

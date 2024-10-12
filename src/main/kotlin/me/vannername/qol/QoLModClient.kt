@@ -1,12 +1,20 @@
 package me.vannername.qol
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
+import me.fzzyhmstrs.fzzy_config.networking.api.ClientPlayNetworkContext
+import me.fzzyhmstrs.fzzy_config.networking.api.ServerPlayNetworkContext
+import me.vannername.qol.QoLMod.ClientPacketReceiver
+import me.vannername.qol.QoLMod.ClientPacketReceiver.handleAFKPayload
 import me.vannername.qol.QoLMod.playerConfigs
 import me.vannername.qol.config.PlayerConfig
+import me.vannername.qol.utils.AFKPayload
+import me.vannername.qol.utils.AFKPayloadCodec
+import me.vannername.qol.utils.PlayerUtils
 import me.vannername.qol.utils.PlayerUtils.getConfig
 import me.vannername.qol.utils.PlayerUtils.hasConfig
-import me.x150.renderer.event.RenderEvents
-import me.x150.renderer.render.Renderer2d
+import me.vannername.qol.utils.PlayerUtils.stopAFK
+//import me.x150.renderer.event.RenderEvents
+//import me.x150.renderer.render.Renderer2d
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.minecraft.client.MinecraftClient
@@ -15,6 +23,7 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.network.packet.CustomPayload
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.GlobalPos
@@ -22,25 +31,45 @@ import net.minecraft.util.math.GlobalPos
 object QoLModClient : ClientModInitializer {
 
     override fun onInitializeClient() {
-        val angleProvider =
-            CompassAnglePredicateProvider { world, _, _ -> GlobalPos(world.registryKey, BlockPos(0, 50, 0)) }
+//        val angleProvider =
+//            CompassAnglePredicateProvider { world, _, _ -> GlobalPos(world.registryKey, BlockPos(0, 50, 0)) }
 
         ClientPlayConnectionEvents.JOIN.register { _, _, client ->
             if (!client.isInSingleplayer) {
+                ConfigApi.network().send(AFKPayload(false), client.player)
+
                 val uuid = client.player!!.uuid
                 playerConfigs += uuid to ConfigApi.registerAndLoadConfig({ PlayerConfig(uuid) })
             }
+            // used for client-side AFK handling
+            GlobalMixinVariables.setPlayerEnteredServer(true)
         }
 
-        RenderEvents.HUD.register { matrices ->
-            val p = MinecraftClient.getInstance().player!!
-            if (p.hasConfig()) {
-                if (p.getConfig().navData.isNavigating) {
-                    renderCompass(matrices.matrices, angleProvider, p)
-                }
-            }
+        ClientPlayConnectionEvents.DISCONNECT.register {_, client ->
+            GlobalMixinVariables.setPlayerEnteredServer(false)
         }
+
+//        RenderEvents.HUD.register { matrices ->
+//            val p = MinecraftClient.getInstance().player!!
+//            if (p.hasConfig()) {
+//                if (p.getConfig().navData.isNavigating) {
+//                    renderCompass(matrices.matrices, angleProvider, p)
+//                }
+//            }
+//        }
     }
+
+//    private fun listenForAFKStart() {
+//        if(GlobalMixinVariables.getPlayerConfig().isAFK) {
+//            GlobalMixinVariables.setPlayerIsInvulnerable(true)
+//        }
+//    }
+//
+//    private fun listenForAFKEnd() {
+//        if(!GlobalMixinVariables.getPlayerConfig().isAFK) {
+//            GlobalMixinVariables.setPlayerIsInvulnerable(false)
+//        }
+//    }
 
     private fun getCompassTextureID(angle: Float): String {
         return when {
@@ -90,13 +119,13 @@ object QoLModClient : ClientModInitializer {
             ItemStack(Items.COMPASS), p.clientWorld, p, 0
         ))
 
-        Renderer2d.renderTexture(
-            matrixStack,
-            Identifier.of("textures/item/compass_${getCompassTextureID(angle)}.png"),
-            100.0,
-            100.0,
-            16.0,
-            16.0
-        )
+//        Renderer2d.renderTexture(
+//            matrixStack,
+//            Identifier.of("textures/item/compass_${getCompassTextureID(angle)}.png"),
+//            100.0,
+//            100.0,
+//            16.0,
+//            16.0
+//        )
     }
 }

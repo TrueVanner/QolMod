@@ -28,8 +28,8 @@ object AFKSetter : CommandHandlerBase<ServerCommandSource>("afk", EnvType.SERVER
     }
 
     private enum class AFKCommandNodeKeys : CommandNodeKey {
-        START,
-        STOP,
+//        START,
+//        STOP,
         PLAYER_NAME;
 
         override fun key(): String = this.name
@@ -48,15 +48,15 @@ object AFKSetter : CommandHandlerBase<ServerCommandSource>("afk", EnvType.SERVER
     override fun registerCommandNodes() {
         super.registerCommandNodes()
 
-        CommandManager
-            .literal("start")
-            .executes(::startAFK)
-            .register(AFKCommandNodeKeys.START)
+//        CommandManager
+//            .literal("start")
+//            .executes(::startAFK)
+//            .register(AFKCommandNodeKeys.START)
 
-        CommandManager
-            .literal("stop")
-            .executes(::stopAFK)
-            .register(AFKCommandNodeKeys.STOP)
+//        CommandManager
+//            .literal("stop")
+//            .executes(::stopAFK)
+//            .register(AFKCommandNodeKeys.STOP)
 
         CommandManager
             .argument("player", EntityArgumentType.player())
@@ -73,8 +73,8 @@ object AFKSetter : CommandHandlerBase<ServerCommandSource>("afk", EnvType.SERVER
         super.commandStructure()
 
         ROOT.addChildren(
-            AFKCommandNodeKeys.START,
-            AFKCommandNodeKeys.STOP,
+//            AFKCommandNodeKeys.START,
+//            AFKCommandNodeKeys.STOP,
             AFKCommandNodeKeys.PLAYER_NAME
         )
     }
@@ -92,16 +92,18 @@ object AFKSetter : CommandHandlerBase<ServerCommandSource>("afk", EnvType.SERVER
         }
     }
 
-    @Throws(CommandSyntaxException::class)
-    fun stopAFK(ctx: CommandContext<ServerCommandSource>): Int {
-        val p = ctx.source.playerOrThrow
-        if (p.getConfig().isAFK) {
-            p.stopAFK()
-            return 1
-        } else {
-            return ctx.sendCommandError("You are not AFK!")
-        }
-    }
+
+    // command input when in AFK state is impossible - this can never be trigerred
+//    @Throws(CommandSyntaxException::class)
+//    fun stopAFK(ctx: CommandContext<ServerCommandSource>): Int {
+//        val p = ctx.source.playerOrThrow
+//        if (p.getConfig().isAFK) {
+//            p.stopAFK()
+//            return 1
+//        } else {
+//            return ctx.sendCommandError("You are not AFK!")
+//        }
+//    }
 
     fun suggestAFK(ctx: CommandContext<ServerCommandSource>, player: PlayerEntity): Int {
         return 1
@@ -110,8 +112,8 @@ object AFKSetter : CommandHandlerBase<ServerCommandSource>("afk", EnvType.SERVER
     override fun defineHelpMessages() {
         addPathDescriptions(
             listOf(ROOT) to "Same as /afk start",
-            listOf(AFKCommandNodeKeys.START) to "Starts AFK mode",
-            listOf(AFKCommandNodeKeys.STOP) to "Leave AFK mode"
+//            listOf(AFKCommandNodeKeys.START) to "Starts AFK mode",
+//            listOf(AFKCommandNodeKeys.STOP) to "Leave AFK mode"
         )
     }
 }

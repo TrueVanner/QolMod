@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(InGameHud.class)
 abstract public class InGameHudMixin {
-    @Inject(method = "render", at = @At("TAIL"))
+    /* @Inject(method = "render", at = @At("TAIL"))
     private void renderOverlayWhenInvincible(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (GlobalMixinVariables.playerIsInvulnerable() && !AFKMixinVariables.isAFK()) {
             RenderSystem.disableDepthTest();
@@ -35,5 +35,5 @@ abstract public class InGameHudMixin {
 
 //        if (GlobalMixinVariables.getClientPlayer().isInvulnerable()) {
 //            }
-    }
+    } */
 }
