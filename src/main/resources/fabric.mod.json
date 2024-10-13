@@ -29,7 +29,7 @@
     ],
     "fabric-datagen": [
       {
-        "value": "me.vannername.qol.QoLModDataGenerator",
+        "value": "me.vannername.qol.main.QoLModDataGenerator",
         "adapter": "kotlin"
       }
     ],

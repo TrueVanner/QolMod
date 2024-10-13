@@ -40,15 +40,21 @@ repositories {
         }
     }
 
-    maven {
-        name = "Modrinth"
-        url = "https://api.modrinth.com/maven"
-        content {
-            includeGroup "maven.modrinth"
-        }
-    }
+    // if only used for FzzyConfig, will be retired
+//    maven {
+//        name = "Modrinth"
+//        url = "https://api.modrinth.com/maven"
+//        content {
+//            includeGroup "maven.modrinth"
+//        }
+//    }
 
     maven { url "https://jitpack.io" }
+
+    maven {
+        name = "FzzyMaven"
+        url = uri("https://maven.fzzyhmstrs.me/")
+    }
 }
 
 fabricApi {

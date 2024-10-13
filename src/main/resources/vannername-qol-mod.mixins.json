@@ -6,17 +6,17 @@
     "ExampleMixin",
     "LivingEntityMixin",
     "PlayerMixin",
-    "ServerPlayerMixin",
-    "AFKMixins.AFKPlayerMixin"
+    "ServerPlayerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "client": [
-    "InGameHudMixin",
-    "AFKMixins.AFKInGameHudMixin",
-    "AFKMixins.AFKKeyboardMixin",
-    "AFKMixins.AFKMouseMixin",
-    "AFKMixins.AFKPlayerMixin"
+    "client.InGameHudMixin",
+    "client.AFKMixins.AFKPlayerMixin",
+    "client.AFKMixins.AFKInGameHudMixin",
+    "client.AFKMixins.AFKKeyboardMixin",
+    "client.AFKMixins.AFKMouseMixin",
+    "client.AFKMixins.AFKPlayerMixin"
   ]
 }
