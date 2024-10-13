@@ -1,29 +1,25 @@
 package me.vannername.qol
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
-import me.fzzyhmstrs.fzzy_config.networking.api.C2SPayloadHandler
-import me.fzzyhmstrs.fzzy_config.networking.api.ClientPlayNetworkContext
-import me.fzzyhmstrs.fzzy_config.networking.api.ServerPlayNetworkContext
-import me.vannername.qol.main.commands.AFKSetter
 import me.vannername.qol.main.commands.EnderChestOpener
-import me.vannername.qol.main.commands.Navigate
 import me.vannername.qol.main.commands.SkipDayNight
+import me.vannername.qol.main.commands.afk.AFKSetter
+import me.vannername.qol.main.commands.navigate.Navigate
 import me.vannername.qol.main.config.PlayerConfig
 import me.vannername.qol.main.config.ServerConfig
 import me.vannername.qol.main.gui.MainGUI
+import me.vannername.qol.main.networking.NetworkingUtils
 import me.vannername.qol.main.utils.PlayerUtils.displayActionbarCoords
 import me.vannername.qol.main.utils.PlayerUtils.displayNavCoords
 import me.vannername.qol.networking.AFKPayload
-import me.vannername.qol.networking.AFKPayloadCodec
+import me.vannername.qol.networking.AFKPayload.AFKPayloadCodec
 import me.vannername.qol.networking.ClientPacketReceiver
-import me.vannername.qol.networking.ClientPacketReceiver.handleAFKPayload
 import me.vannername.qol.networking.ServerPacketReceiver
+import me.vannername.qol.networking.TPCreditsPayload
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
-import net.minecraft.network.listener.ClientPacketListener
-import net.minecraft.network.packet.CustomPayload
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.MinecraftServer
@@ -70,11 +66,7 @@ object QoLMod : ModInitializer {
 
 //		MidnightConfig.init(MOD_ID, MidnightConfigExample::class.java)
 
-        ConfigApi.network().registerC2S(CustomPayload.id<AFKPayload>("qolmod_afk_payload"), AFKPayloadCodec,
-            ServerPacketReceiver::handleAFKPayload)
 
-        ConfigApi.network().registerS2C(CustomPayload.id<AFKPayload>("qolmod_afk_payload"), AFKPayloadCodec,
-            ClientPacketReceiver::handleAFKPayload)
 
         ServerPlayConnectionEvents.JOIN.register { networkHandler, _, _ ->
             val uuid = networkHandler.player.uuid
@@ -97,5 +89,29 @@ object QoLMod : ModInitializer {
                 serverWorldIDs += world.registryKey.value
             }
         }
+    }
+
+    fun registerClientNetworkHandlers() {
+        fun registerAFKPayload() {
+            ConfigApi.network().registerC2S(
+                NetworkingUtils.getCustomID(AFKPayload::class), AFKPayloadCodec,
+                ServerPacketReceiver::handleAFKPayload
+            )
+
+            ConfigApi.network().registerS2C(
+                NetworkingUtils.getCustomID(AFKPayload::class), AFKPayloadCodec,
+                ClientPacketReceiver::handleAFKPayload
+            )
+        }
+
+        fun registerTPCreditsPayload() {
+            ConfigApi.network().registerC2S(
+                NetworkingUtils.getCustomID(TPCreditsPayload::class), TPCreditsPayload.TPCreditsPayloadCodec,
+                ServerPacketReceiver::handleTPCreditsPayload
+            )
+        }
+
+        registerAFKPayload()
+        registerTPCreditsPayload()
     }
 }

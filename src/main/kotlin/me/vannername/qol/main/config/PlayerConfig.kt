@@ -63,5 +63,7 @@ class PlayerConfig(uuid: UUID) : Config(Utils.MyIdentifier(uuid.toString()), "pl
         var isDirect = isDirect
         var reached = reached
     }
+
+    var tpCredits: Double = 0.0
 }
 

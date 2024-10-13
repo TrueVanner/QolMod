@@ -1,13 +1,13 @@
-package me.vannername.qol.main.commands
+package me.vannername.qol.main.commands.tptospawn
 
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
+import me.vannername.qol.main.commands.tptospawn.TPToSpawnUtils.TeleportData
+import me.vannername.qol.main.commands.tptospawn.TPToSpawnUtils.checkTeleportRequirements
 import me.vannername.qol.main.commands.util.ServerCommandHandlerBase
-import me.vannername.qol.main.utils.PlayerUtils.checkTeleportRequirements
 import me.vannername.qol.main.utils.PlayerUtils.sendSimpleMessage
 import me.vannername.qol.main.utils.Utils.sendCommandError
 import me.vannername.qol.main.utils.Utils.sendCommandSuccess
-import me.vannername.qol.main.utils.WorldBlockPos
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.util.Formatting
 
@@ -22,11 +22,6 @@ object TeleportToSpawn : ServerCommandHandlerBase("/home") {
             // listOf(<key>) to "description",
             // ...
         )
-    }
-
-    sealed class TeleportData {
-        data class Success(val to: WorldBlockPos, val cost: Int, val message: String?) : TeleportData()
-        data class Error(val errorMessage: String) : TeleportData()
     }
 
     @Throws(CommandSyntaxException::class)

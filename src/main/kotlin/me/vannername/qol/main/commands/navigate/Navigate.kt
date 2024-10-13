@@ -1,4 +1,4 @@
-package me.vannername.qol.main.commands
+package me.vannername.qol.main.commands.navigate
 
 import com.mojang.brigadier.arguments.BoolArgumentType
 import com.mojang.brigadier.arguments.BoolArgumentType.getBool
@@ -7,12 +7,11 @@ import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import me.vannername.qol.QoLMod
+import me.vannername.qol.main.commands.navigate.NavigateUtils.startNavigation
+import me.vannername.qol.main.commands.navigate.NavigateUtils.stopNavigation
 import me.vannername.qol.main.commands.util.ServerCommandHandlerBase
 import me.vannername.qol.main.utils.PlayerUtils.getConfig
 import me.vannername.qol.main.utils.PlayerUtils.sendSimpleMessage
-import me.vannername.qol.main.utils.PlayerUtils.startNavigation
-import me.vannername.qol.main.utils.PlayerUtils.stopNavigation
-import me.vannername.qol.main.utils.Utils
 import me.vannername.qol.main.utils.Utils.appendCommandSuggestion
 import me.vannername.qol.main.utils.Utils.sendCommandError
 import me.vannername.qol.main.utils.WorldBlockPos
@@ -75,7 +74,7 @@ object Navigate : ServerCommandHandlerBase("navigate") {
      * Stores the coordinates saved on the server.
      */
     object SavedCoordinates {
-        private var coordinates: Map<String, WorldBlockPos> = Utils.decomposeCoordsLocations()
+        private var coordinates: Map<String, WorldBlockPos> = NavigateUtils.decomposeCoordsLocations()
 
         /**
          * Gets the list of all registered coordinates.
@@ -91,7 +90,7 @@ object Navigate : ServerCommandHandlerBase("navigate") {
          * Updates the list of all registered coordinates.
          */
         fun update() {
-            coordinates = Utils.decomposeCoordsLocations()
+            coordinates = NavigateUtils.decomposeCoordsLocations()
         }
 
         fun getNames(worldID: Identifier? = null): List<String> {
@@ -210,14 +209,14 @@ object Navigate : ServerCommandHandlerBase("navigate") {
     private fun startNavigation(position: BlockPos, isDirect: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
         val p = ctx.source.playerOrThrow
         val wPos = WorldBlockPos(position, p.world.registryKey)
-        p.sendSimpleMessage("Distance to destination: ${wPos.getDistance(p.blockPos)}", Formatting.AQUA)
+        p.sendSimpleMessage("Distance to destination: ${wPos.getDistance(WorldBlockPos.current(p))}", Formatting.AQUA)
         p.startNavigation(wPos, isDirect)
         return 1
     }
 
     /**
      * Stops navigation.
-     * @see me.vannername.qol.utils.PlayerUtils.stopNavigation
+     * @see me.vannername.qol.main.utils.PlayerUtils.stopNavigation
      */
     @Throws(CommandSyntaxException::class)
     private fun stopNavigation(ctx: CommandContext<ServerCommandSource>): Int {

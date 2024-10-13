@@ -1,12 +1,11 @@
-package me.vannername.qol.main.commands
+package me.vannername.qol.main.commands.afk
 
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
+import me.vannername.qol.main.commands.afk.AFKUtils.startAFK
 import me.vannername.qol.main.commands.util.ServerCommandHandlerBase
 import me.vannername.qol.main.utils.PlayerUtils.getConfig
-import me.vannername.qol.main.utils.PlayerUtils.startAFK
 import me.vannername.qol.main.utils.Utils.sendCommandError
-import net.fabricmc.api.EnvType
 import net.minecraft.command.CommandSource
 import net.minecraft.command.argument.EntityArgumentType
 import net.minecraft.entity.player.PlayerEntity

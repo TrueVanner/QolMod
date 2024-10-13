@@ -2,15 +2,11 @@ package me.vannername.qol.main.utils
 
 import com.mojang.brigadier.context.CommandContext
 import me.vannername.qol.QoLMod
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import java.awt.Color
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Path
 import java.util.regex.Pattern
 
 object Utils {
@@ -95,7 +91,6 @@ object Utils {
         return text.append(Text.literal(this.string.substring(currentIndex, this.string.length)))
     }
 
-
     @JvmStatic
     fun MutableText.multiColored(colors: List<Colors>, globalColor: Colors = Colors.WHITE): MutableText {
         return this.multiColored(colors.map { color -> color.c.rgb }, globalColor.c.rgb)
@@ -137,27 +132,5 @@ object Utils {
         )
         link.formatted(Formatting.UNDERLINE)
         return append(link)
-    }
-
-    /**
-     * Only works if the server has the [Coord Finder](https://modrinth.com/mod/coord-finder/version/fabric-1.20.6-1.1.0) mod installed.
-     * Transforms the positions specified in the config file of the mod to the list of positions in the current mod's format.
-     *
-     * @return the list of the positions on the server stored in positions.properties
-     */
-    fun decomposeCoordsLocations(): Map<String, WorldBlockPos> {
-        try {
-            val fileContents = Files.readAllLines(Path.of("config/coordfinder/places.properties"))
-            return fileContents.map { line ->
-                // format: name=worldID,x,y,z
-                val split = line.split("=")
-                val name = split[0]
-                val coords = split[1].split(",")
-                name to WorldBlockPos(coords[1].toInt(), coords[2].toInt(), coords[3].toInt(), coords[0])
-            }.toMap()
-        } catch (_: IOException) {
-            // if the file doesn't exist
-            return emptyMap()
-        }
     }
 }

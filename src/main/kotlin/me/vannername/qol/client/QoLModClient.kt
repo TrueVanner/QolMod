@@ -1,13 +1,15 @@
 package me.vannername.qol
 
+//import me.x150.renderer.event.RenderEvents
+//import me.x150.renderer.render.Renderer2d
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
 import me.vannername.qol.QoLMod.playerConfigs
+import me.vannername.qol.client.utils.TPCreditsComputation
 import me.vannername.qol.clientutils.AFKMixinVariables
 import me.vannername.qol.clientutils.GlobalMixinVariables
 import me.vannername.qol.main.config.PlayerConfig
-//import me.x150.renderer.event.RenderEvents
-//import me.x150.renderer.render.Renderer2d
 import net.fabricmc.api.ClientModInitializer
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.minecraft.client.item.CompassAnglePredicateProvider
 import net.minecraft.client.network.ClientPlayerEntity
@@ -30,6 +32,12 @@ object QoLModClient : ClientModInitializer {
 
             // used for client-side AFK handling
             GlobalMixinVariables.setPlayerEnteredServer(true)
+        }
+
+        ClientTickEvents.END_WORLD_TICK.register { world ->
+            for (p in world.players) {
+                TPCreditsComputation.tick(p as ClientPlayerEntity, 5)
+            }
         }
 
         ClientPlayConnectionEvents.DISCONNECT.register {_, client ->

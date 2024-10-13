@@ -1,5 +1,6 @@
 package me.vannername.qol.main.utils
 
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.MinecraftServer
@@ -25,6 +26,13 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos
         ), worldID
     )
 
+    companion object {
+        @JvmStatic
+        fun current(p: PlayerEntity): WorldBlockPos {
+            return WorldBlockPos(p.blockPos, p.world.registryKey)
+        }
+    }
+
     fun getWorld(server: MinecraftServer): ServerWorld {
         return server.getWorld(RegistryKey.of(RegistryKeys.WORLD, Identifier.of(worldID)))!!
     }
@@ -32,7 +40,7 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos
     /**
      * Determines the distance between this position and a BlockPos in the same world.
      */
-    fun getDistance(l: BlockPos): Double {
+    fun getBlockPosDistance(l: BlockPos): Double {
         return sqrt(
             (x - l.x).toDouble().pow(2) + (y - l.y).toDouble().pow(2) + (z - l.z).toDouble()
                 .pow(2)
@@ -47,7 +55,7 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos
         if (l.worldID != this.worldID)
             throw RuntimeException("Attempted to compute distance across different worlds")
 
-        return getDistance(l)
+        return getBlockPosDistance(l)
     }
 
 
