@@ -3,7 +3,6 @@ package me.vannername.qol
 //import me.x150.renderer.event.RenderEvents
 //import me.x150.renderer.render.Renderer2d
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
-import me.vannername.qol.QoLMod.playerConfigs
 import me.vannername.qol.client.utils.TPCreditsComputation
 import me.vannername.qol.clientutils.AFKMixinVariables
 import me.vannername.qol.clientutils.GlobalMixinVariables
@@ -27,7 +26,7 @@ object QoLModClient : ClientModInitializer {
             if (!client.isInSingleplayer) {
 
                 val uuid = client.player!!.uuid
-                playerConfigs += uuid to ConfigApi.registerAndLoadConfig({ PlayerConfig(uuid) })
+                QoLMod.playerConfigs += uuid to ConfigApi.registerAndLoadConfig({ PlayerConfig(uuid) })
             }
 
             // used for client-side AFK handling

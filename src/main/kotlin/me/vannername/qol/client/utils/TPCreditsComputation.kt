@@ -2,23 +2,26 @@ package me.vannername.qol.client.utils
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
 import me.vannername.qol.QoLMod
+import me.vannername.qol.main.utils.PlayerUtils.sendSimpleMessage
+import me.vannername.qol.main.utils.Utils
 import me.vannername.qol.main.utils.WorldBlockPos
 import me.vannername.qol.networking.TPCreditsPayload
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.util.Formatting
 import kotlin.math.abs
 
 object TPCreditsComputation {
     var lastLocations: List<WorldBlockPos> = mutableListOf<WorldBlockPos>()
 
     fun storeLocation(p: ClientPlayerEntity) {
-        lastLocations += WorldBlockPos.current(p)
+        lastLocations += WorldBlockPos.ofPlayer(p)
     }
 
     fun computeDistances(): List<Double> {
         // return list of distances without the final element
         return lastLocations.mapIndexed { i, l ->
             if (i < lastLocations.size - 1) {
-                l.getDistance(lastLocations[i + 1])
+                l.distanceTo(lastLocations[i + 1])
             } else {
                 0.0
             }
@@ -41,6 +44,14 @@ object TPCreditsComputation {
 
     var lastTick: Long = 0
 
+    /**
+     * Determines if the given relation of the distances between the player's
+     * last locations is sufficiently different from 1.
+     */
+    fun sufficientlyDifferent(distancesRelation: Double): Boolean {
+        return abs(1 - distancesRelation) > 0.1
+    }
+
     fun tick(p: ClientPlayerEntity, secondsBetweenTicks: Int) {
         // only tick once per secondsBetweenTicks seconds
         if (System.currentTimeMillis() - lastTick < secondsBetweenTicks * 1000) {
@@ -48,29 +59,42 @@ object TPCreditsComputation {
         }
         // update the variable when ticked
         lastTick = System.currentTimeMillis()
+
         // store current player location
         storeLocation(p)
 
-        // p.sendDebugMessage(lastLocations.last())
+        val ticksPerMinute = 60.0 / secondsBetweenTicks
 
-        // after a minute of location recording
-        if (lastLocations.size == 60 / secondsBetweenTicks) {
+        // regardless of time between ticks, credits are given out each minute
+        if (lastLocations.size >= ticksPerMinute) {
             try {
+                Utils.debug("Computing TP credits for player: ${p.name.string}")
+                Utils.debug("Last locations: $lastLocations")
+                // compute credits reward: 0.1 credit per minute is the max reward
+                // one can get.  for each relation sufficiently
+                // different from 1 (only possible if player movement varied
+                // significantly during the computation)
 
+                val relations = computeRelations()
+                Utils.debug("Relations: ${relations.map { it.toString() + if (sufficientlyDifferent(it)) " (+)" else "" }}")
+
+                val creditsReward = computeRelations().fold(0.0) { acc, it ->
+                    acc + if (sufficientlyDifferent(it)) 1.0 / (ticksPerMinute - 2) else 0.0
+                }
+
+                Utils.debug("Credits reward: $creditsReward")
+
+                // send a request to update player's TP credits to the server
+                ConfigApi.network().send(TPCreditsPayload(creditsReward), p)
             } catch (e: Exception) {
+                p.sendSimpleMessage(
+                    "Warning: failed to compute TP Credits. Please contact админ (хуесос) asap!!",
+                    Formatting.RED
+                )
                 QoLMod.logger.debug("Warning: failed to compute TP Credits")
             }
 
-            // compute credits reward: 1 credit for each relation sufficiently
-            // different from 1 (only possible if player movement varied
-            // significantly during the computation)
-
-            val creditsReward = computeRelations().fold(0.0) { acc, it ->
-                if (abs(1 - it) > 0.25) 1.0 else 0.0
-            }
-
-            ConfigApi.network().send(TPCreditsPayload(creditsReward), p)
-
+            // empty the list
             lastLocations = mutableListOf()
         }
     }

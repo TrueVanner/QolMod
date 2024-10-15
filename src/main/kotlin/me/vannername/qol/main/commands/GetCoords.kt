@@ -9,7 +9,7 @@ import net.minecraft.server.command.ServerCommandSource
  * Template for a command handler.
  * NEVER use / before the command!
  */
-object CommandHandlerTemplate : ServerCommandHandlerBase("") {
+object GetCoords : ServerCommandHandlerBase("getcoords") {
 
     private enum class BaseSuggestionProviderKeys : SuggestionProviderKey {
         EXAMPLEPROVIDER; // can't contain _ !

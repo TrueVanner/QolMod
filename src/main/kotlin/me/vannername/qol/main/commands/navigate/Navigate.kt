@@ -209,7 +209,7 @@ object Navigate : ServerCommandHandlerBase("navigate") {
     private fun startNavigation(position: BlockPos, isDirect: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
         val p = ctx.source.playerOrThrow
         val wPos = WorldBlockPos(position, p.world.registryKey)
-        p.sendSimpleMessage("Distance to destination: ${wPos.getDistance(WorldBlockPos.current(p))}", Formatting.AQUA)
+        p.sendSimpleMessage("Distance to destination: ${wPos.distanceTo(WorldBlockPos.ofPlayer(p))}", Formatting.AQUA)
         p.startNavigation(wPos, isDirect)
         return 1
     }

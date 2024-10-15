@@ -5,6 +5,7 @@ import me.vannername.qol.main.commands.EnderChestOpener
 import me.vannername.qol.main.commands.SkipDayNight
 import me.vannername.qol.main.commands.afk.AFKSetter
 import me.vannername.qol.main.commands.navigate.Navigate
+import me.vannername.qol.main.commands.tptospawn.TeleportToSpawn
 import me.vannername.qol.main.config.PlayerConfig
 import me.vannername.qol.main.config.ServerConfig
 import me.vannername.qol.main.gui.MainGUI
@@ -22,7 +23,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
-import net.minecraft.server.MinecraftServer
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
 import org.slf4j.Logger
@@ -42,11 +42,11 @@ object QoLMod : ModInitializer {
     @JvmField
     var serverWorldIDs: List<Identifier> = listOf()
 
-    private lateinit var server: MinecraftServer
-
-    fun getServer(): MinecraftServer {
-        return server
-    }
+//    private lateinit var server: MinecraftServer
+//
+//    fun getServer(): MinecraftServer {
+//        return server
+//    }
 
     @JvmField
     var playerConfigs: Map<UUID, PlayerConfig> = mutableMapOf()
@@ -63,12 +63,14 @@ object QoLMod : ModInitializer {
         Navigate.init()
         SkipDayNight.init()
         AFKSetter.init()
+        TeleportToSpawn.init()
 
 //		MidnightConfig.init(MOD_ID, MidnightConfigExample::class.java)
 
-
+        registerNetworkHandlers()
 
         ServerPlayConnectionEvents.JOIN.register { networkHandler, _, _ ->
+            // add the player to the config
             val uuid = networkHandler.player.uuid
             playerConfigs += uuid to ConfigApi.registerAndLoadConfig({ PlayerConfig(uuid) })
             // update the AFK status of the player
@@ -83,15 +85,16 @@ object QoLMod : ModInitializer {
         }
 
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
-            this.server = server
+//            this.server = server
             defaultWorld = server.getWorld(RegistryKey.of(RegistryKeys.WORLD, Identifier.of("overworld")))!!
+
             for (world in server.worlds) {
                 serverWorldIDs += world.registryKey.value
             }
         }
     }
 
-    fun registerClientNetworkHandlers() {
+    fun registerNetworkHandlers() {
         fun registerAFKPayload() {
             ConfigApi.network().registerC2S(
                 NetworkingUtils.getCustomID(AFKPayload::class), AFKPayloadCodec,
@@ -106,7 +109,8 @@ object QoLMod : ModInitializer {
 
         fun registerTPCreditsPayload() {
             ConfigApi.network().registerC2S(
-                NetworkingUtils.getCustomID(TPCreditsPayload::class), TPCreditsPayload.TPCreditsPayloadCodec,
+                NetworkingUtils.getCustomID(TPCreditsPayload::class),
+                TPCreditsPayload.TPCreditsPayloadCodec,
                 ServerPacketReceiver::handleTPCreditsPayload
             )
         }

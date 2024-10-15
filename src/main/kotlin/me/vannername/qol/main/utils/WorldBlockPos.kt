@@ -27,8 +27,7 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos
     )
 
     companion object {
-        @JvmStatic
-        fun current(p: PlayerEntity): WorldBlockPos {
+        fun ofPlayer(p: PlayerEntity): WorldBlockPos {
             return WorldBlockPos(p.blockPos, p.world.registryKey)
         }
     }
@@ -40,7 +39,7 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos
     /**
      * Determines the distance between this position and a BlockPos in the same world.
      */
-    fun getBlockPosDistance(l: BlockPos): Double {
+    fun distanceToBlockPos(l: BlockPos): Double {
         return sqrt(
             (x - l.x).toDouble().pow(2) + (y - l.y).toDouble().pow(2) + (z - l.z).toDouble()
                 .pow(2)
@@ -51,11 +50,15 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos
      * Determines the distance between this and another WorldBlockPos.
      * @throws RuntimeException if the worlds are different.
      */
-    fun getDistance(l: WorldBlockPos): Double {
+    fun distanceTo(l: WorldBlockPos): Double {
         if (l.worldID != this.worldID)
             throw RuntimeException("Attempted to compute distance across different worlds")
 
-        return getBlockPosDistance(l)
+        return distanceToBlockPos(l)
+    }
+
+    fun isWithinDistance(pos: WorldBlockPos, distance: Double): Boolean {
+        return distanceTo(pos) <= distance
     }
 
 

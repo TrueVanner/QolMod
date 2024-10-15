@@ -159,7 +159,7 @@ abstract class ServerCommandHandlerBase(val commandName: String) {
             rootNode = node
         }
         if (node is ArgumentCommandNode<*, *> && required) {
-            requiredNodes + key
+            requiredNodes += key
         }
     }
 
@@ -201,7 +201,7 @@ abstract class ServerCommandHandlerBase(val commandName: String) {
      */
     protected open fun register() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
-            dispatcher.root.addChild(rootNode as CommandNode<ServerCommandSource>)
+            dispatcher.root.addChild(rootNode)
         }
     }
 
