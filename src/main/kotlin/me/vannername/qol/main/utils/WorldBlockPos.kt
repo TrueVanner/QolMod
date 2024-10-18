@@ -7,6 +7,7 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.GlobalPos
 import net.minecraft.world.World
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -33,7 +34,11 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos
     }
 
     fun getWorld(server: MinecraftServer): ServerWorld {
-        return server.getWorld(RegistryKey.of(RegistryKeys.WORLD, Identifier.of(worldID)))!!
+        return server.getWorld(getWorldRegistryKey())!!
+    }
+
+    fun getWorldRegistryKey(): RegistryKey<World> {
+        return RegistryKey.of(RegistryKeys.WORLD, Identifier.of(worldID))
     }
 
     /**
@@ -78,5 +83,9 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos
      */
     fun isInSameWorld(world: Identifier): Boolean {
         return worldID == world.toString()
+    }
+
+    fun toGlobalPos(): GlobalPos {
+        return GlobalPos(getWorldRegistryKey(), this)
     }
 }

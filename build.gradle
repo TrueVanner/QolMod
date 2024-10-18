@@ -70,12 +70,14 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
     modImplementation "eu.pb4:player-data-api:[${project.player_data_api_version}]"
     modImplementation "eu.pb4:sgui:[${project.server_gui_version}]"
-//    modImplementation 'com.github.0x3C50:Renderer:master-SNAPSHOT'
+//    include modImplementation("io.github.0x3c50.renderer:renderer-fabric:1.2.2")
+//    implementation 'com.github.0x3C50:Renderer:49e8e88faf'
     modImplementation "maven.modrinth:fzzy-config:${project.fzzy_config_version}"
 
     implementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     implementation "org.assertj:assertj-core:3.25.1"
     implementation "net.peanuuutz.tomlkt:tomlkt:0.3.7"
+    implementation 'com.google.code.gson:gson:2.11.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
 

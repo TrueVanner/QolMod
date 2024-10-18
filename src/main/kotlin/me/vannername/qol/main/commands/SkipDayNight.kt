@@ -2,6 +2,7 @@ package me.vannername.qol.main.commands
 
 import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
+import com.mojang.brigadier.builder.LiteralArgumentBuilder.literal
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import me.fzzyhmstrs.fzzy_config.util.Walkable
@@ -17,6 +18,7 @@ import me.vannername.qol.main.utils.Utils.sendCommandError
 import me.vannername.qol.main.utils.Utils.sentenceCase
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
+import net.minecraft.command.CommandSource
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
@@ -35,12 +37,11 @@ object SkipDayNight : ServerCommandHandlerBase("skipday, skipnight") {
         detectTimeChange()
     }
 
-//    private enum class SkipDayNightSuggestionProviderKeys : SuggestionProviderKey {
-//
-//        // TODO: Add suggestions for duration
-//
-//        override fun name(): Identifier = Utils.MyIdentifier(this.name)
-//    }
+    private enum class SkipDayNightSuggestionProviderKeys : SuggestionProviderKey {
+        DURATION;
+
+        override fun key(): String = this.name
+    }
 
     private enum class SkipDayNightCommandNodeKeys : CommandNodeKey {
         ROOT_SKIPDAY,
@@ -60,10 +61,12 @@ object SkipDayNight : ServerCommandHandlerBase("skipday, skipnight") {
 
         CommandManager
             .literal("skipday")
+            .executes(::help)
             .register(SkipDayNightCommandNodeKeys.ROOT_SKIPDAY)
 
         CommandManager
             .literal("skipnight")
+            .executes(::help)
             .register(SkipDayNightCommandNodeKeys.ROOT_SKIPNIGHT)
 
         CommandManager
@@ -73,7 +76,9 @@ object SkipDayNight : ServerCommandHandlerBase("skipday, skipnight") {
 
         CommandManager
             .argument("duration", IntegerArgumentType.integer())
-//            .suggests()
+            .suggests { ctx, builder ->
+                SkipDayNightSuggestionProviderKeys.DURATION.getSuggestions(ctx, builder)
+            }
             .executes { ctx ->
                 skipPeriod(currentMode(ctx), getInteger(ctx, "duration"), false, ctx)
             }
@@ -99,6 +104,15 @@ object SkipDayNight : ServerCommandHandlerBase("skipday, skipnight") {
                 showStatus(currentMode(ctx), ctx)
             }
             .register(SkipDayNightCommandNodeKeys.STATUS)
+    }
+
+    override fun registerSuggestionProviders() {
+        registerSuggestionProvider(SkipDayNightSuggestionProviderKeys.DURATION)
+        { ctx, builder ->
+            CommandSource.suggestMatching(
+                listOf("5", "10", "50"), builder
+            )
+        }
     }
 
     override fun commandStructure() {
@@ -127,6 +141,10 @@ object SkipDayNight : ServerCommandHandlerBase("skipday, skipnight") {
 
             dispatcher.root.addChild(SkipDayNightCommandNodeKeys.ROOT_SKIPDAY.getNode())
             dispatcher.root.addChild(SkipDayNightCommandNodeKeys.ROOT_SKIPNIGHT.getNode())
+
+            // aliases
+            dispatcher.register(literal<ServerCommandSource>("sd").redirect(SkipDayNightCommandNodeKeys.ROOT_SKIPDAY.getNode()))
+            dispatcher.register(literal<ServerCommandSource>("sn").redirect(SkipDayNightCommandNodeKeys.ROOT_SKIPNIGHT.getNode()))
 
             commandStructure()
         }

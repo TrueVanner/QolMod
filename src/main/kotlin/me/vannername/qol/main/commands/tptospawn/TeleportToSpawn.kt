@@ -26,6 +26,7 @@ object TeleportToSpawn : ServerCommandHandlerBase("home") {
 
         val tpData = p.checkTeleportRequirements()
         if (tpData is TeleportData.Success) {
+//            p.teleportTo(TeleportTarget())
             p.requestTeleport(tpData.to.x.toDouble(), tpData.to.y.toDouble(), tpData.to.z.toDouble())
             val oldPos = WorldBlockPos.ofPlayer(p)
             Thread {

@@ -2,6 +2,7 @@ package me.vannername.qol.main.commands.util
 
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.builder.ArgumentBuilder
+import com.mojang.brigadier.builder.LiteralArgumentBuilder.literal
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import com.mojang.brigadier.suggestion.SuggestionProvider
@@ -45,7 +46,7 @@ import kotlin.to
  * @param side the side on which the command is registered.
  */
 
-abstract class ServerCommandHandlerBase(val commandName: String) {
+abstract class ServerCommandHandlerBase(val commandName: String, val aliases: List<String> = emptyList()) {
 
     // stores the suggestion providers used for this command.
     private var suggestionProviders: Map<SuggestionProviderKey,
@@ -202,6 +203,17 @@ abstract class ServerCommandHandlerBase(val commandName: String) {
     protected open fun register() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.root.addChild(rootNode)
+
+            for (alias in aliases) {
+                dispatcher.root.addChild(
+                    literal<ServerCommandSource>(alias)
+                        .redirect(rootNode)
+                        .executes((defaultAction ?: Command { ctx -> help(ctx) }))
+                        .build()
+                )
+//                dispatcher.register(literal<ServerCommandSource>(alias).redirect(rootNode))
+//                dispatcher.root.addChild(node)
+            }
         }
     }
 
@@ -259,7 +271,7 @@ abstract class ServerCommandHandlerBase(val commandName: String) {
     private fun pathToString(path: List<CommandNodeKey>): String {
         var toReturn = "/"
         for (node in path) {
-            toReturn + when {
+            toReturn += when {
                 node.getNode() is LiteralCommandNode<ServerCommandSource> -> node.getNode().name
                 else -> {
                     when {

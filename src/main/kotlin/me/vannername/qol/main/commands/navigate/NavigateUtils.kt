@@ -1,12 +1,23 @@
 package me.vannername.qol.main.commands.navigate
 
+import com.google.common.base.Predicate
 import me.vannername.qol.main.config.PlayerConfig
 import me.vannername.qol.main.utils.PlayerUtils.getConfig
 import me.vannername.qol.main.utils.WorldBlockPos
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.LodestoneTrackerComponent
+import net.minecraft.component.type.NbtComponent
+import net.minecraft.inventory.Inventories
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.nbt.NbtCompound
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.text.Text
+import net.minecraft.util.math.GlobalPos
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Optional
 
 object NavigateUtils {
     /**
@@ -23,10 +34,12 @@ object NavigateUtils {
         getConfig().navData.isNavigating = true
         getConfig().navData =
             PlayerConfig.PlayerNavigationData(true, to, isDirect)
+        giveCompass(to)
     }
 
     fun ServerPlayerEntity.stopNavigation() {
         getConfig().navData.isNavigating = false
+        removeCompass()
     }
 
     /**
@@ -35,7 +48,7 @@ object NavigateUtils {
      *
      * @return the list of the positions on the server stored in positions.properties
      */
-    fun decomposeCoordsLocations(): Map<String, WorldBlockPos> {
+    fun decomposeCoordFinderLocations(): Map<String, WorldBlockPos> {
         try {
             val fileContents = Files.readAllLines(Path.of("config/coordfinder/places.properties"))
             return fileContents.map { line ->
@@ -49,5 +62,36 @@ object NavigateUtils {
             // if the file doesn't exist
             return emptyMap()
         }
+    }
+
+    fun ServerPlayerEntity.giveCompass(dest: WorldBlockPos) {
+        inventory.offerOrDrop(createNavigationCompass(dest))
+    }
+
+    fun ServerPlayerEntity.removeCompass() {
+        Inventories.remove(
+            inventory,
+            Predicate<ItemStack> { item ->
+                item.get<NbtComponent>(DataComponentTypes.CUSTOM_DATA)?.contains("qol_nav_compass") == true
+            },
+            64, false
+        )
+    }
+
+    fun createNavigationCompass(dest: WorldBlockPos): ItemStack {
+        val compass = ItemStack(Items.COMPASS)
+        compass.set(
+            DataComponentTypes.LODESTONE_TRACKER,
+            LodestoneTrackerComponent(Optional.of<GlobalPos>(dest.toGlobalPos()), false)
+        )
+        compass.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Navigation Compass"))
+
+        // for identification
+        compass.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(
+            NbtCompound().apply {
+                putBoolean("qol_nav_compass", true)
+            }
+        ))
+        return compass
     }
 }

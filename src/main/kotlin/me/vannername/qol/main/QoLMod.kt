@@ -1,10 +1,13 @@
 package me.vannername.qol
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
+import me.vannername.qol.commands.util.GetCoords
 import me.vannername.qol.main.commands.EnderChestOpener
 import me.vannername.qol.main.commands.SkipDayNight
 import me.vannername.qol.main.commands.afk.AFKSetter
 import me.vannername.qol.main.commands.navigate.Navigate
+import me.vannername.qol.main.commands.serverchest.ServerChest
+import me.vannername.qol.main.commands.serverchest.ServerChestUtils
 import me.vannername.qol.main.commands.tptospawn.TeleportToSpawn
 import me.vannername.qol.main.config.PlayerConfig
 import me.vannername.qol.main.config.ServerConfig
@@ -23,6 +26,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
+import net.minecraft.server.MinecraftServer
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
 import org.slf4j.Logger
@@ -42,11 +46,11 @@ object QoLMod : ModInitializer {
     @JvmField
     var serverWorldIDs: List<Identifier> = listOf()
 
-//    private lateinit var server: MinecraftServer
-//
-//    fun getServer(): MinecraftServer {
-//        return server
-//    }
+    private lateinit var server: MinecraftServer
+
+    fun getServer(): MinecraftServer {
+        return server
+    }
 
     @JvmField
     var playerConfigs: Map<UUID, PlayerConfig> = mutableMapOf()
@@ -64,6 +68,8 @@ object QoLMod : ModInitializer {
         SkipDayNight.init()
         AFKSetter.init()
         TeleportToSpawn.init()
+        GetCoords.init()
+        ServerChest.init()
 
 //		MidnightConfig.init(MOD_ID, MidnightConfigExample::class.java)
 
@@ -84,8 +90,12 @@ object QoLMod : ModInitializer {
             }
         }
 
+        ServerLifecycleEvents.SERVER_STOPPING.register { server ->
+            ServerChestUtils.serializeServerChest()
+        }
+
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
-//            this.server = server
+            this.server = server
             defaultWorld = server.getWorld(RegistryKey.of(RegistryKeys.WORLD, Identifier.of("overworld")))!!
 
             for (world in server.worlds) {

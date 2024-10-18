@@ -26,7 +26,7 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 
-object Navigate : ServerCommandHandlerBase("navigate") {
+object Navigate : ServerCommandHandlerBase("navigate", listOf("nav")) {
 
     // TODO: fix compass location
     // TODO: tests
@@ -50,6 +50,8 @@ object Navigate : ServerCommandHandlerBase("navigate") {
     private enum class NavigateCommandNodeKeys : CommandNodeKey {
         CONTINUE,
         COORDS,
+        TO_SAVED,
+        LOCATION_NAME,
         IS_DIRECT,
         STOP;
 
@@ -73,15 +75,15 @@ object Navigate : ServerCommandHandlerBase("navigate") {
     /**
      * Stores the coordinates saved on the server.
      */
-    object SavedCoordinates {
-        private var coordinates: Map<String, WorldBlockPos> = NavigateUtils.decomposeCoordsLocations()
+    object SavedLocations {
+        private var locations: Map<String, WorldBlockPos> = NavigateUtils.decomposeCoordFinderLocations()
 
         /**
          * Gets the list of all registered coordinates.
          * Filters by world if worldID is specified.
          */
         fun get(worldID: Identifier? = null): Map<String, WorldBlockPos> {
-            val toReturn = coordinates
+            val toReturn = locations
             if (worldID == null) return toReturn
             return toReturn.filter { it.value.worldID == worldID.toString() }
         }
@@ -90,33 +92,33 @@ object Navigate : ServerCommandHandlerBase("navigate") {
          * Updates the list of all registered coordinates.
          */
         fun update() {
-            coordinates = NavigateUtils.decomposeCoordsLocations()
+            locations = NavigateUtils.decomposeCoordFinderLocations()
         }
 
         fun getNames(worldID: Identifier? = null): List<String> {
 //        return origin.values.map { it.getString(false) }
-            return get(worldID).keys.map { "\"$it\"" }
+            return get(worldID).keys.toList()
         }
 
         /**
          * Gets a coordinate by name in a "value" format.
          */
         fun getByName(name: String): WorldBlockPos {
-            return coordinates[name.slice(1..name.length - 2)]
-                ?: throw IllegalArgumentException("No such coordinate found")
+            return locations[name]
+                ?: throw IllegalArgumentException("No such location found")
         }
     }
 
     private var suggestionProvidersPerWorldLoaded = false
 
-    private fun loadSuggestionProvidersPerWorld() {
+    private fun registerSuggestionProvidersPerWorld() {
         if (!suggestionProvidersPerWorldLoaded) {
             for (worldID in QoLMod.serverWorldIDs) {
                 suggestionProviderKeysPerWorld += worldID to SuggestionProviderKeyForWorld(worldID)
                 registerSuggestionProvider(suggestionProviderKeysPerWorld[worldID]!!)
                 { _: CommandContext<ServerCommandSource>, builder: SuggestionsBuilder ->
                     CommandSource.suggestMatching(
-                        SavedCoordinates.getNames(worldID), builder
+                        SavedLocations.getNames(worldID), builder
                     )
                 }
             }
@@ -128,7 +130,7 @@ object Navigate : ServerCommandHandlerBase("navigate") {
         registerSuggestionProvider(globalCoordsSuggestionProvider)
         { ctx: CommandContext<ServerCommandSource>, builder: SuggestionsBuilder ->
             CommandSource.suggestMatching(
-                SavedCoordinates.getNames(), builder
+                SavedLocations.getNames(), builder
             )
         }
     }
@@ -145,9 +147,22 @@ object Navigate : ServerCommandHandlerBase("navigate") {
             .argument("coords", BlockPosArgumentType.blockPos())
             // if sent by the player, only coordinates in the local world
             // are autofilled. Otherwise, all coordinates.
+            .suggests(BlockPosArgumentType.blockPos()::listSuggestions)
+            .executes { ctx ->
+                val coords = SavedLocations.getByName(StringArgumentType.getString(ctx, "coords"))
+                startNavigation(coords, false, ctx)
+            }
+            .register(NavigateCommandNodeKeys.COORDS)
+
+        CommandManager
+            .literal("to_saved")
+            .register(NavigateCommandNodeKeys.TO_SAVED)
+
+        CommandManager
+            .argument("location_name", StringArgumentType.string())
             .suggests { ctx, builder ->
-                loadSuggestionProvidersPerWorld()
-                SavedCoordinates.update()
+                registerSuggestionProvidersPerWorld()
+                SavedLocations.update()
                 val player = ctx.source.player
                 if (player != null) {
                     suggestionProviderKeysPerWorld[player.world.registryKey.value]!!
@@ -157,15 +172,10 @@ object Navigate : ServerCommandHandlerBase("navigate") {
                 }
             }
             .executes { ctx ->
-                val coords = try {
-                    BlockPosArgumentType.getBlockPos(ctx, "coords")
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    SavedCoordinates.getByName(StringArgumentType.getString(ctx, "coords"))
-                }
+                val coords = SavedLocations.getByName(StringArgumentType.getString(ctx, "location_name"))
                 startNavigation(coords, false, ctx)
             }
-            .register(NavigateCommandNodeKeys.COORDS)
+            .register(NavigateCommandNodeKeys.LOCATION_NAME)
 
         CommandManager
             .argument("isDirect", BoolArgumentType.bool())
@@ -175,7 +185,7 @@ object Navigate : ServerCommandHandlerBase("navigate") {
                     BlockPosArgumentType.getBlockPos(ctx, "coords")
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    SavedCoordinates.getByName(StringArgumentType.getString(ctx, "coords"))
+                    SavedLocations.getByName(StringArgumentType.getString(ctx, "location_name"))
                 }
                 startNavigation(coords, getBool(ctx, "isDirect"), ctx)
             }
@@ -193,7 +203,16 @@ object Navigate : ServerCommandHandlerBase("navigate") {
         ROOT.addChildren(
             NavigateCommandNodeKeys.COORDS,
             NavigateCommandNodeKeys.STOP,
-            NavigateCommandNodeKeys.CONTINUE
+            NavigateCommandNodeKeys.CONTINUE,
+            NavigateCommandNodeKeys.TO_SAVED
+        )
+
+        NavigateCommandNodeKeys.TO_SAVED.addChild(
+            NavigateCommandNodeKeys.LOCATION_NAME
+        )
+
+        NavigateCommandNodeKeys.LOCATION_NAME.addChild(
+            NavigateCommandNodeKeys.IS_DIRECT
         )
 
         NavigateCommandNodeKeys.COORDS.addChild(
@@ -203,13 +222,19 @@ object Navigate : ServerCommandHandlerBase("navigate") {
 
     /**
      * Starts navigation to the specified coordinates.
-     * @see me.vannername.qol.utils.PlayerUtils.startNavigation
+     * @see NavigateUtils.startNavigation
      */
     @Throws(CommandSyntaxException::class)
     private fun startNavigation(position: BlockPos, isDirect: Boolean, ctx: CommandContext<ServerCommandSource>): Int {
         val p = ctx.source.playerOrThrow
+        if (p.getConfig().navData.isNavigating) {
+            return ctx.sendCommandError("You are already navigating. Use /navigate stop to stop.")
+        }
         val wPos = WorldBlockPos(position, p.world.registryKey)
-        p.sendSimpleMessage("Distance to destination: ${wPos.distanceTo(WorldBlockPos.ofPlayer(p))}", Formatting.AQUA)
+        p.sendSimpleMessage(
+            "Distance to destination: ${wPos.distanceTo(WorldBlockPos.ofPlayer(p)).toInt()}",
+            Formatting.AQUA
+        )
         p.startNavigation(wPos, isDirect)
         return 1
     }
@@ -221,7 +246,10 @@ object Navigate : ServerCommandHandlerBase("navigate") {
     @Throws(CommandSyntaxException::class)
     private fun stopNavigation(ctx: CommandContext<ServerCommandSource>): Int {
         val p = ctx.source.playerOrThrow
-        p.sendSimpleMessage("Navigation stopped", Formatting.AQUA)
+        if (!p.getConfig().navData.isNavigating) {
+            return ctx.sendCommandError("You are not currently navigating.")
+        }
+        p.sendSimpleMessage("Navigation stopped.", Formatting.AQUA)
         p.stopNavigation()
         return 1
     }

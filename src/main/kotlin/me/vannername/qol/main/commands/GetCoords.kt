@@ -3,48 +3,29 @@ package me.vannername.qol.commands.util
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import me.vannername.qol.main.commands.util.ServerCommandHandlerBase
+import me.vannername.qol.main.utils.Utils.appendCommandSuggestion
 import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.text.Text
 
 /**
  * Template for a command handler.
  * NEVER use / before the command!
  */
-object GetCoords : ServerCommandHandlerBase("getcoords") {
+object GetCoords : ServerCommandHandlerBase("getcoords", listOf("gc")) {
 
-    private enum class BaseSuggestionProviderKeys : SuggestionProviderKey {
-        EXAMPLEPROVIDER; // can't contain _ !
-
-        override fun key(): String = this.name
-    }
-
-    private enum class BaseCommandNodeKeys : CommandNodeKey {
-        EXAMPLE_KEY;
-
-        override fun key(): String = this.name
-    }
-
-    override fun registerSuggestionProviders() {
-//        registerSuggestionProvider(<suggestionProviderKey>)
-//        { ctx, builder ->
-//            CommandSource.suggestMatching(
-//                <candidates (list)>, builder
-//            )
-//        }
-    }
-
-    override fun defineHelpMessages() {
-        super.defineHelpMessages()
-        addPathDescriptions(
-            // listOf(<key>) to "description",
-            // ...
-        )
+    override fun init() {
+        setDefaultAction(::run)
+        super.init()
     }
 
     @Throws(CommandSyntaxException::class)
     override fun run(ctx: CommandContext<ServerCommandSource>): Int {
-//    override fun run(ctx: CommandContext<FabricClientCommandSource>): Int {
-        // val p = ctx.source.playerOrThrow
-
+        val p = ctx.source.playerOrThrow
+        p.server.sendMessage(
+            Text
+                .literal("This is a test")
+                .appendCommandSuggestion("/navigate 0 0 0")
+        )
         return 1
     }
 }

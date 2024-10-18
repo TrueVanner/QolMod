@@ -133,4 +133,12 @@ object Utils {
         link.formatted(Formatting.UNDERLINE)
         return append(link)
     }
+
+    fun broadcast(message: Text) {
+        QoLMod.getServer().playerManager.broadcast(message, false)
+    }
+
+    fun broadcast(message: String) {
+        broadcast(Text.literal(message))
+    }
 }
