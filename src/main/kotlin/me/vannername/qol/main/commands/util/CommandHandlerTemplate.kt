@@ -32,6 +32,14 @@ object CommandHandlerTemplate : ServerCommandHandlerBase("") {
 //        }
     }
 
+    override fun registerCommandNodes() {
+        super.registerCommandNodes()
+    }
+
+    override fun commandStructure() {
+        super.commandStructure()
+    }
+
     override fun defineHelpMessages() {
         super.defineHelpMessages()
         addPathDescriptions(

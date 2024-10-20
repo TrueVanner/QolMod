@@ -25,7 +25,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
 // as register() is fully overwritten, command name is purely decorative
-object SkipDayNight : ServerCommandHandlerBase("skipday, skipnight") {
+object SkipDayNight : ServerCommandHandlerBase("skipdaynight") {
 
     // TODO: resolve errors with skip force
 

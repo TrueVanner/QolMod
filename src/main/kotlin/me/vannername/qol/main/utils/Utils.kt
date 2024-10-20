@@ -36,6 +36,7 @@ object Utils {
 
     /**
      * Transforms the Text by coloring the specified segments according to the specified colors.
+     * If specified, the whole Text is colored with globalColor.
      * Usage:
      * Text.literal("%c1{This} is a %c2{test} message").multiColored(listOf(Color.RED, Color.GREEN))
      * Text.literal("This uses %c{single} color %c{twice}").multiColored(listOf(Color.RED))
@@ -107,6 +108,7 @@ object Utils {
         RED(Color.RED),
         GREEN(Color.GREEN),
         BLUE(Color.BLUE),
+        GOLD(Color(255, 215, 0)),
         YELLOW(Color.YELLOW),
         CYAN(Color.CYAN),
         GRAY(Color.GRAY)
@@ -118,8 +120,14 @@ object Utils {
         return this[0].uppercase() + this.substring(1).lowercase()
     }
 
-    fun MutableText.appendCommandSuggestion(command: String): MutableText {
-        val link = Text.literal(command)
+    /**
+     * Appends a line of Text that suggests a command upon being clicked.
+     * @param command the command that will be suggested
+     * @param text the text that will be displayed. The command itself will be displayed
+     *  if null.
+     */
+    fun MutableText.appendCommandSuggestion(command: String, text: String? = null): MutableText {
+        val link = Text.literal(text ?: command)
         link.setStyle(
             Style.EMPTY.withClickEvent(
                 ClickEvent(

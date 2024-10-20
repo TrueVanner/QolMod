@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "ExampleMixin",
+    "ItemFrameMixin",
     "LivingEntityMixin",
     "PlayerMixin",
     "ServerPlayerMixin"
@@ -12,8 +13,8 @@
     "defaultRequire": 1
   },
   "client": [
+    "client.ClientPlayerMixin",
     "client.InGameHudMixin",
-    "client.AFKMixins.AFKPlayerMixin",
     "client.AFKMixins.AFKInGameHudMixin",
     "client.AFKMixins.AFKKeyboardMixin",
     "client.AFKMixins.AFKMouseMixin",

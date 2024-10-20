@@ -65,15 +65,17 @@ object ServerChestUtils {
     }
 
     fun serializeServerChest() {
-        val storageFile = getStorageFile()
-        storageFile.writeText("") // empty the file
-        for (i in 0..26) {
-            serverChest.getStack(i).run {
-                if (!isEmpty) {
-                    try {
-                        storageFile.appendText("$i|${serializeItemStack(this)}\n")
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+        if (::serverChest.isInitialized) {
+            val storageFile = getStorageFile()
+            storageFile.writeText("") // empty the file
+            for (i in 0..26) {
+                serverChest.getStack(i).run {
+                    if (!isEmpty) {
+                        try {
+                            storageFile.appendText("$i|${serializeItemStack(this)}\n")
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
                 }
             }

@@ -3,7 +3,9 @@ package me.vannername.qol.main.utils
 import me.vannername.qol.QoLMod
 import me.vannername.qol.main.config.PlayerConfig
 import me.vannername.qol.main.utils.Utils.multiColored
+import net.minecraft.entity.decoration.ItemFrameEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Items
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import kotlin.math.abs
@@ -86,5 +88,39 @@ object PlayerUtils {
         val toSend = Text.literal("[QoLMod] ${message}")
             .formatted(Formatting.YELLOW)
         sendMessage(toSend, false)
+    }
+
+    fun PlayerEntity.getCoordsString(): String {
+        return "${blockPos.x} ${blockPos.y} ${blockPos.z}"
+    }
+
+    fun PlayerEntity.lightUpNearestInvisibleItemFrames() {
+        // each frame that is invisible is added to the list if the player
+        // is holding an amethyst shard in their offhand. Otherwise,
+        // the list is empty - thanks to this, the next function immediately
+        // removes the glowing effects from the items when the shard
+        // is removed from the offhand. The second function also runs on a
+        // slightly larger radius to ensure that item frames out of the effective range
+        // (defined by me as 3 blocks) are not affected.
+        // the first check checks for both invisibility and glowing
+        // as otherwise item frames never stay in "close" for more than one tick.
+        val close = if (offHandStack.isOf(Items.AMETHYST_SHARD))
+            world.getEntitiesByClass<ItemFrameEntity>(
+                ItemFrameEntity::class.java,
+                boundingBox.expand(3.0),
+                { it.isInvisible || it.isGlowing }
+            ) else listOf()
+        close.forEach {
+            it.isInvisible = false
+            it.isGlowing = true
+        }
+        world.getEntitiesByClass<ItemFrameEntity>(
+            ItemFrameEntity::class.java,
+            boundingBox.expand(4.0),
+            { it.isGlowing && !close.contains(it) }
+        ).forEach {
+            it.isGlowing = false
+            it.isInvisible = true
+        }
     }
 }

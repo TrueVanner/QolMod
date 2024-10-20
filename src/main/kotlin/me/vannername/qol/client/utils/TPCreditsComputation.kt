@@ -2,10 +2,11 @@ package me.vannername.qol.client.utils
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
 import me.vannername.qol.QoLMod
+import me.vannername.qol.main.commands.tptospawn.TPToSpawnUtils
+import me.vannername.qol.main.networking.payloads.TPCreditsPayload
 import me.vannername.qol.main.utils.PlayerUtils.sendSimpleMessage
 import me.vannername.qol.main.utils.Utils
 import me.vannername.qol.main.utils.WorldBlockPos
-import me.vannername.qol.networking.TPCreditsPayload
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.util.Formatting
 import kotlin.math.abs
@@ -21,6 +22,9 @@ object TPCreditsComputation {
         // return list of distances without the final element
         return lastLocations.mapIndexed { i, l ->
             if (i < lastLocations.size - 1) {
+                // skip immediately if world transition has occurred
+                if (!l.isInSameWorld(lastLocations[i + 1])) 0.0
+
                 l.distanceTo(lastLocations[i + 1])
             } else {
                 0.0
@@ -79,18 +83,19 @@ object TPCreditsComputation {
                 Utils.debug("Relations: ${relations.map { it.toString() + if (sufficientlyDifferent(it)) " (+)" else "" }}")
 
                 val creditsReward = computeRelations().fold(0.0) { acc, it ->
-                    acc + if (sufficientlyDifferent(it)) 1.0 / (ticksPerMinute - 2) else 0.0
+                    acc + if (sufficientlyDifferent(it)) 0.125 / (ticksPerMinute - 2) else 0.0
                 }
 
                 Utils.debug("Credits reward: $creditsReward")
 
                 // send a request to update player's TP credits to the server
-                ConfigApi.network().send(TPCreditsPayload(creditsReward), p)
+                ConfigApi.network().send(TPCreditsPayload(TPToSpawnUtils.TPCredits(creditsReward)), p)
             } catch (e: Exception) {
                 p.sendSimpleMessage(
-                    "Warning: failed to compute TP Credits. Please contact админ (хуесос) asap!!",
+                    "Warning: failed to compute TP Credits for the last minute. If this continues please contact админ (хуесос) asap!!",
                     Formatting.RED
                 )
+                e.printStackTrace()
                 QoLMod.logger.debug("Warning: failed to compute TP Credits")
             }
 

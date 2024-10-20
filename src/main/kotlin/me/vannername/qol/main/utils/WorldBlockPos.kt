@@ -85,6 +85,10 @@ open class WorldBlockPos(x: Int, y: Int, z: Int, val worldID: String) : BlockPos
         return worldID == world.toString()
     }
 
+    fun isInSameWorld(pos: WorldBlockPos): Boolean {
+        return worldID == pos.worldID
+    }
+
     fun toGlobalPos(): GlobalPos {
         return GlobalPos(getWorldRegistryKey(), this)
     }

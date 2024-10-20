@@ -5,6 +5,7 @@ import me.fzzyhmstrs.fzzy_config.config.Config
 import me.fzzyhmstrs.fzzy_config.config.ConfigSection
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedAny
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedColor
+import me.vannername.qol.main.commands.tptospawn.TPToSpawnUtils.TPCredits
 import me.vannername.qol.main.utils.Utils
 import me.vannername.qol.main.utils.WorldBlockPos
 import net.minecraft.world.World
@@ -64,6 +65,6 @@ class PlayerConfig(uuid: UUID) : Config(Utils.MyIdentifier(uuid.toString()), "pl
         var reached = reached
     }
 
-    var tpCredits: Double = 0.0
+    var tpCredits: TPCredits = TPCredits(0.0)
 }
 
