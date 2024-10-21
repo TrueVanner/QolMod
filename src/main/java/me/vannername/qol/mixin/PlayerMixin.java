@@ -1,21 +1,26 @@
 package me.vannername.qol.mixin;
 
-import com.mojang.authlib.GameProfile;
 import me.vannername.qol.QoLMod;
 import me.vannername.qol.main.config.PlayerConfig;
 import me.vannername.qol.main.utils.PlayerUtils;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.List;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerMixin extends LivingEntityMixin {
@@ -49,8 +54,62 @@ public abstract class PlayerMixin extends LivingEntityMixin {
         detect("Closed a handled screen");
     }
 
-    //    @Inject(method = "<init>", at = @At(value = "TAIL"))
-    public void alterHealth(World world, BlockPos pos, float yaw, GameProfile gameProfile, CallbackInfo ci) {
-//        ((PlayerEntity) (Object) this).getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).addPersistentModifier(new EntityAttributeModifier("thisnamedosentmatter", -15, EntityAttributeModifier.Operation.ADD_VALUE));
+    @Unique
+    private static List<EntityType> hostiles = List.of(
+            EntityType.BLAZE,
+            EntityType.ENDERMITE,
+            EntityType.ENDERMAN,
+            EntityType.SLIME,
+            EntityType.ZOMBIE,
+            EntityType.PIGLIN_BRUTE,
+            EntityType.PIGLIN,
+            EntityType.SKELETON,
+            EntityType.BAT,
+            EntityType.SPIDER,
+            EntityType.CAVE_SPIDER,
+            EntityType.ZOMBIFIED_PIGLIN,
+            EntityType.EVOKER,
+            EntityType.VINDICATOR,
+            EntityType.PILLAGER,
+            EntityType.RAVAGER,
+            EntityType.VEX,
+            EntityType.GUARDIAN,
+            EntityType.ELDER_GUARDIAN,
+            EntityType.SHULKER,
+            EntityType.HUSK,
+            EntityType.STRAY,
+            EntityType.PHANTOM,
+            EntityType.CREEPER,
+            EntityType.GHAST,
+            EntityType.MAGMA_CUBE,
+            EntityType.SILVERFISH,
+            EntityType.ZOMBIE_VILLAGER,
+            EntityType.DROWNED,
+            EntityType.WITHER_SKELETON,
+            EntityType.WITCH,
+            EntityType.HOGLIN,
+            EntityType.ZOGLIN,
+            EntityType.WARDEN,
+            EntityType.ENDER_DRAGON,
+            EntityType.WITHER,
+            EntityType.FIREBALL,
+            EntityType.BREEZE,
+            EntityType.SHULKER_BULLET
+    );
+
+    @Inject(method = "attack", at = @At(value = "TAIL"), cancellable = true)
+    public void preventFriendlyDamage(Entity target, CallbackInfo ci) {
+        PlayerEntity player = (PlayerEntity) (Object) this;
+
+        if (player.isSneaking() && !hostiles.contains(target.getType())) {
+            ci.cancel();
+            player.getWorld().addParticle(
+                    ParticleTypes.HEART,
+                    target.getX() - 0.5 + Math.random(),
+                    target.getHeight() - 0.25 + Math.random() * 0.5,
+                    target.getZ() - 0.5 + Math.random(),
+                    Math.random(), Math.random(), Math.random());
+        }
+//        .getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).addPersistentModifier(new EntityAttributeModifier("thisnamedosentmatter", -15, EntityAttributeModifier.Operation.ADD_VALUE));
     }
 }

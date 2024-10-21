@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "gDg",
+    "DED",
+    "gDg"
+  ],
+  "key": {
+    "g": {
+      "item": "minecraft:gold_ingot"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "E": {
+      "item": "minecraft:ender_chest"
+    }
+  },
+  "result": {
+    "id": "vannername-qol-mod:server_chest",
+    "count": 1
+  }
+}

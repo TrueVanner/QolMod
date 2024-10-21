@@ -3,6 +3,7 @@ package me.vannername.qol.main.commands
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import me.vannername.qol.main.commands.util.ServerCommandHandlerBase
+import me.vannername.qol.main.items.ModItems
 import me.vannername.qol.main.utils.Utils.sendCommandError
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -25,7 +26,7 @@ object EnderChestOpener : ServerCommandHandlerBase("e") {
     override fun run(ctx: CommandContext<ServerCommandSource>): Int {
         val p = ctx.source.playerOrThrow
 
-        if (!p.inventory.containsAny { stack -> stack.isOf(Items.ENDER_CHEST) }) {
+        if (!p.inventory.containsAny { stack -> stack.isOf(Items.ENDER_CHEST) || stack.isOf(ModItems.SERVER_CHEST) }) {
             return ctx.sendCommandError("You don't have an ender chest in your inventory!")
         }
 

@@ -3,10 +3,10 @@ package me.vannername.qol.main.commands.serverchest
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import me.vannername.qol.main.commands.util.ServerCommandHandlerBase
+import me.vannername.qol.main.items.ModItems
 import me.vannername.qol.main.utils.Utils.sendCommandError
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.Items
 import net.minecraft.screen.GenericContainerScreenHandler
 import net.minecraft.screen.SimpleNamedScreenHandlerFactory
 import net.minecraft.server.command.ServerCommandSource
@@ -24,8 +24,8 @@ object ServerChest : ServerCommandHandlerBase("serverchest", listOf("svc")) {
     override fun run(ctx: CommandContext<ServerCommandSource>): Int {
         val p = ctx.source.playerOrThrow
 
-        if (!p.inventory.containsAny { stack -> stack.isOf(Items.ENDER_CHEST) }) {
-            return ctx.sendCommandError("You don't have an ender chest in your inventory!")
+        if (!p.inventory.containsAny { stack -> stack.isOf(ModItems.SERVER_CHEST) }) {
+            return ctx.sendCommandError("You don't have a server chest in your inventory!")
         }
 
         openServerChest(p)

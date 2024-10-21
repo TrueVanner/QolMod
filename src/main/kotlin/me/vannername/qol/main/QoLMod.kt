@@ -12,6 +12,7 @@ import me.vannername.qol.main.commands.serverchest.ServerChestUtils
 import me.vannername.qol.main.commands.tptospawn.TeleportToSpawn
 import me.vannername.qol.main.config.PlayerConfig
 import me.vannername.qol.main.config.ServerConfig
+import me.vannername.qol.main.items.ModItems
 import me.vannername.qol.main.networking.NetworkingUtils
 import me.vannername.qol.main.networking.payloads.TPCreditsPayload
 import me.vannername.qol.main.utils.PlayerUtils.displayActionbarCoords
@@ -162,5 +163,7 @@ object QoLMod : ModInitializer {
         registerCommands()
         registerNetworkHandlers()
         registerEvents()
+
+        ModItems.init()
     }
 }
