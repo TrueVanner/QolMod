@@ -1,5 +1,6 @@
 package me.vannername.qol.main.gui
 
+/*
 import com.mojang.authlib.GameProfile
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
@@ -155,4 +156,4 @@ class MainGUI {
         }
         return 0
     }
-}
+}*/

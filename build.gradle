@@ -67,12 +67,12 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
-    modImplementation "eu.pb4:player-data-api:[${project.player_data_api_version}]"
-    modImplementation "eu.pb4:sgui:[${project.server_gui_version}]"
+    include modImplementation("net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}")
+//    modImplementation "eu.pb4:player-data-api:[${project.player_data_api_version}]"
+//    modImplementation "eu.pb4:sgui:[${project.server_gui_version}]"
 //    include modImplementation("io.github.0x3c50.renderer:renderer-fabric:1.2.2")
 //    implementation 'com.github.0x3C50:Renderer:49e8e88faf'
-    modImplementation "maven.modrinth:fzzy-config:${project.fzzy_config_version}"
+    include modImplementation("maven.modrinth:fzzy-config:${project.fzzy_config_version}")
 
     implementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     implementation "org.assertj:assertj-core:3.25.1"

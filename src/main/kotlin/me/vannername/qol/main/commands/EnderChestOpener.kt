@@ -15,7 +15,7 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 
 
-object EnderChestOpener : ServerCommandHandlerBase("e") {
+object EnderChestOpener : ServerCommandHandlerBase("e", listOf("у")) {
 
     override fun init() {
         setDefaultAction(::run)

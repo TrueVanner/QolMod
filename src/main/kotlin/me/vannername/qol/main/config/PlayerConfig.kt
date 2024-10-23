@@ -56,7 +56,6 @@ class PlayerConfig(uuid: UUID) : Config(Utils.MyIdentifier(uuid.toString()), "pl
         @ClientModifiable
         var isNavigating = isNavigating
 
-        @ClientModifiable
         var target = ValidatedAny(target)
 
         @ClientModifiable

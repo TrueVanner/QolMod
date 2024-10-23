@@ -93,7 +93,7 @@ object SkipDayNightUtils {
                         it.sendMessage(
                             Text.literal("${mode.name.sentenceCase()} successfully skipped!").formatted(Formatting.AQUA)
                         )
-                        if (currentValue == 1) {
+                        if (currentValue == 0) {
                             it.sendMessage(
                                 Text.literal("Warning: this was the last ${mode.name.lowercase()} skip.")
                                     .formatted(Formatting.YELLOW)
