@@ -1,4 +1,4 @@
-package me.vannername.qol.networking
+package me.vannername.qol.main.networking.payloads
 
 import me.vannername.qol.main.networking.NetworkingUtils
 import net.minecraft.network.RegistryByteBuf

@@ -1,20 +1,20 @@
 package me.vannername.qol.client.utils
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
-import me.vannername.qol.QoLMod
+import me.vannername.qol.main.QoLMod
 import me.vannername.qol.main.commands.tptospawn.TPToSpawnUtils
 import me.vannername.qol.main.networking.payloads.TPCreditsPayload
 import me.vannername.qol.main.utils.PlayerUtils.sendSimpleMessage
 import me.vannername.qol.main.utils.Utils
 import me.vannername.qol.main.utils.WorldBlockPos
-import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.util.Formatting
 import kotlin.math.abs
 
 object TPCreditsComputation {
     var lastLocations: List<WorldBlockPos> = mutableListOf<WorldBlockPos>()
 
-    fun storeLocation(p: ClientPlayerEntity) {
+    fun storeLocation(p: AbstractClientPlayerEntity) {
         lastLocations += WorldBlockPos.ofPlayer(p)
     }
 
@@ -56,7 +56,7 @@ object TPCreditsComputation {
         return abs(1 - distancesRelation) > 0.1
     }
 
-    fun tick(p: ClientPlayerEntity, secondsBetweenTicks: Int) {
+    fun tick(p: AbstractClientPlayerEntity, secondsBetweenTicks: Int) {
         // only tick once per secondsBetweenTicks seconds
         if (System.currentTimeMillis() - lastTick < secondsBetweenTicks * 1000) {
             return

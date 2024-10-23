@@ -32,9 +32,9 @@ abstract public class AFKKeyboardMixin {
 
     @Unique
     private boolean isKeyAllowed(int key) {
-        if(key == GLFW.GLFW_KEY_ENTER) {
-            return true;
-        }
+//        if(key == GLFW.GLFW_KEY_ENTER) {
+//            return true;
+//        }
         for(KeyBinding keyBind : allowedBinds) {
             if(getKeyCode(keyBind) == key) {
                 return true;
@@ -64,11 +64,15 @@ abstract public class AFKKeyboardMixin {
         } else {
             // if the player is on the pause screen when they clicked ESC
             // but left it right after, they can only be going back into the game.
+            AFKMixinVariables.setIgnoreInput(true);
             new Thread(() -> {
                 try {
                     Thread.sleep(50);
                     if (GlobalMixinVariables.currentScreen() == null) {
                         AFKMixinVariables.setEnteredEscMenu(false);
+                        AFKMixinVariables.ignoreInputFor(500);
+                    } else {
+                        AFKMixinVariables.setIgnoreInput(false);
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -83,6 +87,8 @@ abstract public class AFKKeyboardMixin {
             try {
                 if(key == GLFW.GLFW_KEY_ESCAPE) {
                     updateEnteredEscMenu();
+                } else if (key == GLFW.GLFW_KEY_ENTER) {
+                    AFKMixinVariables.ignoreInputFor(500);
                 } else {
                     // actions are never prevented if the key pressed is ESC
                     if (AFKMixinVariables.shouldPreventInput() && !isKeyAllowed(key)) {

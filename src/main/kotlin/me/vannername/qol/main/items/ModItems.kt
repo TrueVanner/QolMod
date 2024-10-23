@@ -1,6 +1,6 @@
 package me.vannername.qol.main.items
 
-import me.vannername.qol.QoLMod
+import me.vannername.qol.main.QoLMod
 import me.vannername.qol.main.utils.Utils
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.minecraft.item.Item

@@ -27,16 +27,22 @@ abstract public class AFKMouseMixin {
         if (GlobalMixinVariables.playerEnteredServer()) {
 
             // if the player just left the pause screen, detect it and update the variable
-            new Thread(() -> {
-                try {
-                    Thread.sleep(50);
-                    if (GlobalMixinVariables.currentScreen() == null) {
-                        AFKMixinVariables.setEnteredEscMenu(false);
+            if (AFKMixinVariables.enteredEscMenu()) {
+                AFKMixinVariables.setIgnoreInput(true);
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(50);
+                        if (GlobalMixinVariables.currentScreen() == null) {
+                            AFKMixinVariables.setEnteredEscMenu(false);
+                            AFKMixinVariables.ignoreInputFor(500);
+                        } else {
+                            AFKMixinVariables.setIgnoreInput(false);
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+                }).start();
+            }
 
             try {
                 if (AFKMixinVariables.shouldPreventInput()) {

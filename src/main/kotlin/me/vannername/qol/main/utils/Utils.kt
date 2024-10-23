@@ -1,7 +1,8 @@
 package me.vannername.qol.main.utils
 
 import com.mojang.brigadier.context.CommandContext
-import me.vannername.qol.QoLMod
+import me.vannername.qol.main.QoLMod
+import net.minecraft.entity.EntityType
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
@@ -23,15 +24,17 @@ object Utils {
     }
 
     fun CommandContext<ServerCommandSource>.sendCommandSuccess(text: String): Int {
-        val toSend = Text.literal(text).formatted(Formatting.GREEN)
-        this.sendMessage(toSend)
+        Text.literal(text).formatted(Formatting.GREEN).run { source.sendMessage(this) }
         return 1
     }
 
     fun CommandContext<ServerCommandSource>.sendCommandError(text: String): Int {
-        val toSend = Text.literal(text).formatted(Formatting.RED)
-        source.sendError(toSend)
+        Text.literal(text).formatted(Formatting.RED).run { source.sendError(this) }
         return 0
+    }
+
+    fun CommandContext<ServerCommandSource>.sendWarning(text: String) {
+        Text.literal(text).formatted(Formatting.YELLOW).run { source.sendMessage(this) }
     }
 
     /**
@@ -111,7 +114,8 @@ object Utils {
         GOLD(Color(255, 215, 0)),
         YELLOW(Color.YELLOW),
         CYAN(Color.CYAN),
-        GRAY(Color.GRAY)
+        GRAY(Color.GRAY),
+        AQUA(Color(0, 255, 255)),
     }
 
     fun MyIdentifier(id: String): Identifier = Identifier.of(QoLMod.MOD_ID, id)
@@ -149,4 +153,46 @@ object Utils {
     fun broadcast(message: String) {
         broadcast(Text.literal(message))
     }
+
+    val hostiles = listOf(
+        EntityType.BLAZE,
+        EntityType.ENDERMITE,
+        EntityType.ENDERMAN,
+        EntityType.SLIME,
+        EntityType.ZOMBIE,
+        EntityType.PIGLIN_BRUTE,
+        EntityType.PIGLIN,
+        EntityType.SKELETON,
+        EntityType.BAT,
+        EntityType.SPIDER,
+        EntityType.CAVE_SPIDER,
+        EntityType.ZOMBIFIED_PIGLIN,
+        EntityType.EVOKER,
+        EntityType.VINDICATOR,
+        EntityType.PILLAGER,
+        EntityType.RAVAGER,
+        EntityType.VEX,
+        EntityType.GUARDIAN,
+        EntityType.ELDER_GUARDIAN,
+        EntityType.SHULKER,
+        EntityType.HUSK,
+        EntityType.STRAY,
+        EntityType.PHANTOM,
+        EntityType.CREEPER,
+        EntityType.GHAST,
+        EntityType.MAGMA_CUBE,
+        EntityType.SILVERFISH,
+        EntityType.ZOMBIE_VILLAGER,
+        EntityType.DROWNED,
+        EntityType.WITHER_SKELETON,
+        EntityType.WITCH,
+        EntityType.HOGLIN,
+        EntityType.ZOGLIN,
+        EntityType.WARDEN,
+        EntityType.ENDER_DRAGON,
+        EntityType.WITHER,
+        EntityType.FIREBALL,
+        EntityType.BREEZE,
+        EntityType.SHULKER_BULLET
+    )
 }

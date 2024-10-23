@@ -72,7 +72,7 @@ object TeleportToSpawn : ServerCommandHandlerBase("home") {
             Thread {
                 Thread.sleep(50)
                 if (!oldPos.isWithinDistance(WorldBlockPos.ofPlayer(p), 10.0)) {
-                    p.getConfig().tpCredits -= tpData.cost
+                    p.getConfig().tpCredits -= tpData.cost.value
                 } else {
                     p.sendSimpleMessage("Something went wrong. Your TPCs were not deducted.", Formatting.RED)
                 }
@@ -90,8 +90,8 @@ object TeleportToSpawn : ServerCommandHandlerBase("home") {
         val destination = p.getTeleportDestination()
         val distance = destination.to.distanceToBlockPos(p.blockPos)
         val cost = TPToSpawnUtils.calculateTPCost(distance)
-        val balance = p.getConfig().tpCredits
-        val isEnough = cost <= p.getConfig().tpCredits
+        val balance = TPToSpawnUtils.TPCredits(p.getConfig().tpCredits)
+        val isEnough = cost <= balance
 
         p.sendMessage(
             Text.literal(
@@ -102,7 +102,7 @@ object TeleportToSpawn : ServerCommandHandlerBase("home") {
                                 distance
                             )
                         }} blocks | %c2{${if (isEnough) "$cost (${cost.getFraction(balance)})" else cost}} TCPs\n" +
-                        "Balance: %c2{${p.getConfig().tpCredits}} TPCs"
+                        "Balance: %c2{${balance}} TPCs"
             ).multiColored(listOf(Colors.WHITE, if (isEnough) Colors.GREEN else Colors.RED), Colors.CYAN)
         )
 

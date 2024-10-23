@@ -6,13 +6,15 @@ import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
-import me.vannername.qol.QoLMod
+import me.vannername.qol.main.QoLMod
 import me.vannername.qol.main.commands.navigate.NavigateUtils.startNavigation
 import me.vannername.qol.main.commands.navigate.NavigateUtils.stopNavigation
 import me.vannername.qol.main.commands.util.ServerCommandHandlerBase
 import me.vannername.qol.main.utils.PlayerUtils.getConfig
 import me.vannername.qol.main.utils.PlayerUtils.sendSimpleMessage
+import me.vannername.qol.main.utils.Utils.Colors
 import me.vannername.qol.main.utils.Utils.appendCommandSuggestion
+import me.vannername.qol.main.utils.Utils.multiColored
 import me.vannername.qol.main.utils.Utils.sendCommandError
 import me.vannername.qol.main.utils.WorldBlockPos
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
@@ -149,8 +151,7 @@ object Navigate : ServerCommandHandlerBase("navigate", listOf("nav")) {
             // are autofilled. Otherwise, all coordinates.
             .suggests(BlockPosArgumentType.blockPos()::listSuggestions)
             .executes { ctx ->
-                val coords = SavedLocations.getByName(StringArgumentType.getString(ctx, "coords"))
-                startNavigation(coords, false, ctx)
+                startNavigation(BlockPosArgumentType.getBlockPos(ctx, "coords"), false, ctx)
             }
             .register(NavigateCommandNodeKeys.COORDS)
 
@@ -231,9 +232,9 @@ object Navigate : ServerCommandHandlerBase("navigate", listOf("nav")) {
             return ctx.sendCommandError("You are already navigating. Use /navigate stop to stop.")
         }
         val wPos = WorldBlockPos(position, p.world.registryKey)
-        p.sendSimpleMessage(
-            "Distance to destination: ${wPos.distanceTo(WorldBlockPos.ofPlayer(p)).toInt()}",
-            Formatting.AQUA
+        p.sendMessage(
+            Text.literal("Distance to destination: %c{${wPos.distanceTo(WorldBlockPos.ofPlayer(p)).toInt()}} blocks.")
+                .multiColored(listOf(Colors.WHITE), Colors.AQUA)
         )
         p.startNavigation(wPos, isDirect)
         return 1

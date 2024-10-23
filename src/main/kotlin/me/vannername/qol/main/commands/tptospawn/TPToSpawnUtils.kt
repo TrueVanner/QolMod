@@ -93,7 +93,7 @@ object TPToSpawnUtils {
 //        if(world.isSpaceEmpty(this, this.boundingBox.offset(destination)))
 
         // TODO: import cost calculations
-        val currentCredits = getConfig().tpCredits
+        val currentCredits = TPCredits(getConfig().tpCredits)
         val cost = calculateTPCost(WorldBlockPos.ofPlayer(this).distanceTo(destination.to))
 
         if (currentCredits < cost) {

@@ -1,11 +1,12 @@
 package me.vannername.qol.main.utils
 
-import me.vannername.qol.QoLMod
+import me.vannername.qol.main.QoLMod
 import me.vannername.qol.main.config.PlayerConfig
 import me.vannername.qol.main.utils.Utils.multiColored
 import net.minecraft.entity.decoration.ItemFrameEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
+import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import kotlin.math.abs
@@ -122,5 +123,9 @@ object PlayerUtils {
             it.isGlowing = false
             it.isInvisible = true
         }
+    }
+
+    fun PlayerEntity.coloredName(): MutableText {
+        return Text.literal(name.string).setStyle(styledDisplayName.style)
     }
 }

@@ -17,7 +17,7 @@
   "entrypoints": {
     "main": [
       {
-        "value": "me.vannername.qol.QoLMod",
+        "value": "me.vannername.qol.main.QoLMod",
         "adapter": "kotlin"
       }
     ],

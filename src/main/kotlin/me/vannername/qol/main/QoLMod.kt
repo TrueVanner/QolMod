@@ -1,32 +1,37 @@
-package me.vannername.qol
+package me.vannername.qol.main
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
 import me.vannername.qol.commands.util.GetCoords
-import me.vannername.qol.event.ItemFrameEventHandler
 import me.vannername.qol.main.commands.EnderChestOpener
-import me.vannername.qol.main.commands.SkipDayNight
 import me.vannername.qol.main.commands.afk.AFKSetter
 import me.vannername.qol.main.commands.navigate.Navigate
 import me.vannername.qol.main.commands.serverchest.ServerChest
 import me.vannername.qol.main.commands.serverchest.ServerChestUtils
+import me.vannername.qol.main.commands.skipdaynight.SkipDayNight
 import me.vannername.qol.main.commands.tptospawn.TeleportToSpawn
 import me.vannername.qol.main.config.PlayerConfig
 import me.vannername.qol.main.config.ServerConfig
 import me.vannername.qol.main.items.ModItems
 import me.vannername.qol.main.networking.NetworkingUtils
+import me.vannername.qol.main.networking.ServerPacketReceiver
+import me.vannername.qol.main.networking.payloads.AFKPayload
+import me.vannername.qol.main.networking.payloads.AFKPayload.AFKPayloadCodec
 import me.vannername.qol.main.networking.payloads.TPCreditsPayload
 import me.vannername.qol.main.utils.PlayerUtils.displayActionbarCoords
 import me.vannername.qol.main.utils.PlayerUtils.displayNavCoords
 import me.vannername.qol.main.utils.PlayerUtils.lightUpNearestInvisibleItemFrames
-import me.vannername.qol.networking.AFKPayload
-import me.vannername.qol.networking.AFKPayload.AFKPayloadCodec
+import me.vannername.qol.main.utils.Utils
 import me.vannername.qol.networking.ClientPacketReceiver
-import me.vannername.qol.networking.ServerPacketReceiver
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
+import net.minecraft.entity.decoration.ItemFrameEntity
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Items
+import net.minecraft.particle.ParticleTypes
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.MinecraftServer
@@ -114,7 +119,18 @@ object QoLMod : ModInitializer {
 
         fun itemFrameHandling() {
             ServerEntityEvents.ENTITY_LOAD.register { entity, world ->
-                ItemFrameEventHandler.onEntityJoinWorld(entity, world)
+                if (entity is ItemFrameEntity) {
+                    if (world.getEntitiesByClass<PlayerEntity>(
+                            PlayerEntity::class.java,
+                            entity.boundingBox.expand(5.0),
+                            { player -> player.offHandStack.isOf(Items.AMETHYST_SHARD) }
+                        ).isNotEmpty()
+                    ) {
+                        entity.isInvisible = true
+                    }
+//            System.out.println("Item frame placed at: " + itemFrame.getBlockPos());
+                    // Your custom logic here
+                }
             }
         }
 
@@ -126,12 +142,33 @@ object QoLMod : ModInitializer {
             }
         }
 
+        fun preventFriendlyDamage() {
+            ServerLivingEntityEvents.ALLOW_DAMAGE.register { entity, source, amount ->
+                if (source.source is PlayerEntity && source.source?.isSneaking == true && !Utils.hostiles.contains(
+                        entity.type
+                    )
+                ) {
+                    source.source!!.world.addParticle(
+                        ParticleTypes.HEART,
+                        entity.x, // - 0.5 + Math.random(),
+                        entity.y + entity.height + 2,// - 0.25 + Math.random() * 0.5,
+                        entity.z, // - 0.5 + Math.random(),
+                        0.0, 0.0, 0.0
+                    )
+                    false
+                } else {
+                    true
+                }
+            }
+        }
+
         handleHotbarCoordinates()
         addPlayerConfigUponJoining()
         setVariablesOnServerLoad()
         serverChestSerialization()
         itemFrameHandling()
         handleItemFrameVisibility()
+        preventFriendlyDamage()
     }
 
     fun registerNetworkHandlers() {

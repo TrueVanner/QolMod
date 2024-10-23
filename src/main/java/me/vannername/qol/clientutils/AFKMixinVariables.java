@@ -1,7 +1,7 @@
 package me.vannername.qol.clientutils;
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi;
-import me.vannername.qol.networking.AFKPayload;
+import me.vannername.qol.main.networking.payloads.AFKPayload;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.text.Text;
@@ -13,6 +13,8 @@ abstract public class AFKMixinVariables {
     private static int overlayColor = OverlayColor.BEFORE_CLICK.color;
     private static boolean shouldLeaveAFKOnNextInput = false;
     private static boolean enteredEscMenu = false;
+    private static boolean ignoreInput = false; // determines whether the system should treat
+    // the inputs as attempts to exit AFK mode.
 
     public static boolean isAFK() {
         return isAFK;
@@ -38,11 +40,27 @@ abstract public class AFKMixinVariables {
         return overlayColor;
     }
 
+    public static void setIgnoreInput(boolean newState) {
+        ignoreInput = newState;
+    }
+
+    public static void ignoreInputFor(long delay) {
+        ignoreInput = true;
+        new Thread(() -> {
+            try {
+                Thread.sleep(delay);
+                ignoreInput = false;
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+    }
+
     public static void prepareToOrStopAFK() {
         // when player activates AFK using /afk start, the release of
         // the Enter key is also counted, so the counter technically starts
         // at 1. Any further key presses are also counted 2 times
-        if (nrInputs % 2 == 1) {
+        if (nrInputs % 2 == 1 && !ignoreInput) {
             if (shouldLeaveAFKOnNextInput) {
                 // configs are desynced for some reason, but I'm using it here anyway
                 // (along with sending the packet
@@ -86,6 +104,13 @@ abstract public class AFKMixinVariables {
         }
     }
 
+    /**
+     * Determines whether the mouse and keyboard should prevent any input.
+     * Should always be true when the player is AFK, except if they are
+     * typing in chat or are on the ESC menu.
+     *
+     * @return
+     */
     public static boolean shouldPreventInput() {
         return isAFK()
                 && !(MinecraftClient.getInstance().currentScreen instanceof ChatScreen)
