@@ -4,6 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,8 +28,10 @@ public abstract class ItemFrameMixin {
         ItemFrameEntity itemFrame = (ItemFrameEntity) (Object) this;
         if (!player.isSneaking()) {
             cir.setReturnValue(ActionResult.FAIL);
-            if (player.getMainHandStack().isOf(Items.AMETHYST_SHARD)
-                    || player.getOffHandStack().isOf(Items.AMETHYST_SHARD)) {
+            // fix: added a check for itemframe glow as clicking with amethyst shard when the item frame
+            // is in "preview" mode (glowing & visible) causes the item frame to become invisible
+            if ((player.getMainHandStack().isOf(Items.AMETHYST_SHARD)
+                    || player.getOffHandStack().isOf(Items.AMETHYST_SHARD)) && !itemFrame.isGlowing()) {
                 // to prevent multiple interactions in a short time
                 if (System.currentTimeMillis() - time > 100) {
                     itemFrame.setInvisible(!itemFrame.isInvisible());
@@ -39,7 +42,7 @@ public abstract class ItemFrameMixin {
     }
 
     @Inject(method = "dropHeldStack", at = @At("HEAD"), cancellable = true)
-    private void onDropHeldStack(Entity entity, boolean alwaysDrop, CallbackInfo ci) {
+    private void onDropHeldStack(ServerWorld world, Entity entity, boolean dropSelf, CallbackInfo ci) {
         if (entity instanceof PlayerEntity player && !player.isSneaking()) {
             ci.cancel();
         }

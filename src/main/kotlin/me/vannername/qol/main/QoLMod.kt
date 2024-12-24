@@ -2,10 +2,11 @@ package me.vannername.qol.main
 
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
 import me.vannername.qol.commands.util.GetCoords
+import me.vannername.qol.commands.util.Help
 import me.vannername.qol.main.commands.EnderChestOpener
 import me.vannername.qol.main.commands.afk.AFKSetter
 import me.vannername.qol.main.commands.navigate.Navigate
-import me.vannername.qol.main.commands.serverchest.ServerChest
+import me.vannername.qol.main.commands.serverchest.ServerChestCmd
 import me.vannername.qol.main.commands.serverchest.ServerChestUtils
 import me.vannername.qol.main.commands.skipdaynight.SkipDayNight
 import me.vannername.qol.main.commands.tptospawn.TeleportToSpawn
@@ -76,7 +77,8 @@ object QoLMod : ModInitializer {
         AFKSetter.init()
         TeleportToSpawn.init()
         GetCoords.init()
-        ServerChest.init()
+        ServerChestCmd.init()
+        Help.init()
     }
 
     fun registerEvents() {
@@ -111,9 +113,9 @@ object QoLMod : ModInitializer {
             }
         }
 
-        fun serverChestSerialization() {
+        fun saveServerChestOnStop() {
             ServerLifecycleEvents.SERVER_STOPPING.register { server ->
-                ServerChestUtils.serializeServerChest()
+                ServerChestUtils.saveServerChest()
             }
         }
 
@@ -165,7 +167,7 @@ object QoLMod : ModInitializer {
         handleHotbarCoordinates()
         addPlayerConfigUponJoining()
         setVariablesOnServerLoad()
-        serverChestSerialization()
+        saveServerChestOnStop()
         itemFrameHandling()
         handleItemFrameVisibility()
         preventFriendlyDamage()

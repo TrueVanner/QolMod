@@ -17,26 +17,31 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 abstract public class AFKKeyboardMixin {
 
     @Unique
-    KeyBinding[] allowedBinds = new KeyBinding[]{
-            MinecraftClient.getInstance().options.playerListKey,
-            MinecraftClient.getInstance().options.commandKey,
-            MinecraftClient.getInstance().options.chatKey,
-            MinecraftClient.getInstance().options.advancementsKey,
-            MinecraftClient.getInstance().options.fullscreenKey,
-    };
-
-    @Unique
     private static int getKeyCode(KeyBinding keyBinding) {
         return keyBinding.getDefaultKey().getCode();
     }
+
+    // list of keys that do not trigger transitioning out of AFK mode when pressed.
+    // only for the most important keys
+    // fix: added left alt and tab keys, changed array type to accommodate for it
+    @Unique
+    int[] allowedKeys = new int[]{
+            getKeyCode(MinecraftClient.getInstance().options.playerListKey),
+            getKeyCode(MinecraftClient.getInstance().options.commandKey),
+            getKeyCode(MinecraftClient.getInstance().options.chatKey),
+            getKeyCode(MinecraftClient.getInstance().options.advancementsKey),
+            getKeyCode(MinecraftClient.getInstance().options.fullscreenKey),
+            GLFW.GLFW_KEY_LEFT_ALT,
+            GLFW.GLFW_KEY_TAB,
+    };
 
     @Unique
     private boolean isKeyAllowed(int key) {
 //        if(key == GLFW.GLFW_KEY_ENTER) {
 //            return true;
 //        }
-        for(KeyBinding keyBind : allowedBinds) {
-            if(getKeyCode(keyBind) == key) {
+        for (int k : allowedKeys) {
+            if (k == key) {
                 return true;
             }
         }

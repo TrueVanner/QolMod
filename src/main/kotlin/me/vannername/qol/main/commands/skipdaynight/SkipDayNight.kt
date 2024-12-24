@@ -12,19 +12,20 @@ import me.vannername.qol.main.utils.Utils
 import me.vannername.qol.main.utils.Utils.appendCommandSuggestion
 import me.vannername.qol.main.utils.Utils.multiColored
 import me.vannername.qol.main.utils.Utils.sendCommandError
+import me.vannername.qol.main.utils.Utils.sendMessage
+import me.vannername.qol.main.utils.Utils.sendSimpleMessage
 import me.vannername.qol.main.utils.Utils.sendWarning
 import me.vannername.qol.main.utils.Utils.sentenceCase
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.command.CommandSource
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
 // as register() is fully overwritten, command name is purely decorative
 object SkipDayNight : ServerCommandHandlerBase("skipdaynight") {
-
-    // TODO: resolve errors with skip force
 
     override fun init() {
         Mode.NIGHT.opposite = Mode.DAY
@@ -44,6 +45,7 @@ object SkipDayNight : ServerCommandHandlerBase("skipdaynight") {
         ROOT_SKIPDAY,
         ROOT_SKIPNIGHT,
         DURATION,
+        STOP,
         INF,
         FORCE,
         STATUS;
@@ -77,16 +79,23 @@ object SkipDayNight : ServerCommandHandlerBase("skipdaynight") {
                 SkipDayNightSuggestionProviderKeys.DURATION.getSuggestions(ctx, builder)
             }
             .executes { ctx ->
-                skipPeriod(currentMode(ctx), getInteger(ctx, "duration"), false, ctx)
+                skipPeriod(currentMode(ctx), getInteger(ctx, "duration"), ctx)
             }
             .register(SkipDayNightCommandNodeKeys.DURATION)
 
         CommandManager
             .literal("inf")
             .executes { ctx ->
-                skipPeriod(currentMode(ctx), 0, true, ctx)
+                skipPeriod(currentMode(ctx), -1, ctx)
             }
             .register(SkipDayNightCommandNodeKeys.INF)
+
+        CommandManager
+            .literal("stop")
+            .executes { ctx ->
+                skipPeriod(currentMode(ctx), 0, ctx)
+            }
+            .register(SkipDayNightCommandNodeKeys.STOP)
 
         CommandManager
             .literal("force")
@@ -118,6 +127,7 @@ object SkipDayNight : ServerCommandHandlerBase("skipdaynight") {
             .addChildren(
                 HELP,
                 SkipDayNightCommandNodeKeys.DURATION,
+                SkipDayNightCommandNodeKeys.STOP,
                 SkipDayNightCommandNodeKeys.INF,
                 SkipDayNightCommandNodeKeys.FORCE,
                 SkipDayNightCommandNodeKeys.STATUS
@@ -127,6 +137,7 @@ object SkipDayNight : ServerCommandHandlerBase("skipdaynight") {
             .addChildren(
                 HELP,
                 SkipDayNightCommandNodeKeys.DURATION,
+                SkipDayNightCommandNodeKeys.STOP,
                 SkipDayNightCommandNodeKeys.INF,
                 SkipDayNightCommandNodeKeys.FORCE,
                 SkipDayNightCommandNodeKeys.STATUS
@@ -158,11 +169,38 @@ object SkipDayNight : ServerCommandHandlerBase("skipdaynight") {
     }
 
     override fun defineHelpMessages() {
-        addPathDescriptions(
-            listOf(SkipDayNightCommandNodeKeys.ROOT_SKIPDAY, HELP) to "Displays this help message.",
-            listOf(SkipDayNightCommandNodeKeys.ROOT_SKIPNIGHT, HELP) to "Displays this help message.",
-            appendRoot = false
+        // intentionally kept blank
+    }
+
+    override fun help(ctx: CommandContext<ServerCommandSource>): Int {
+        // simple shortcut
+        fun format(param: String, descr: String): MutableText {
+            return Text.literal("")
+                .appendCommandSuggestion("/skipnight $param", "/skip(night|day) $param")
+                .append(" - $descr").formatted(Formatting.YELLOW)
+        }
+
+        ctx.sendSimpleMessage("Help message for both /skipnight and /skipday", Formatting.YELLOW)
+
+        ctx.sendMessage(format("[help]", "Displays this help message."))
+
+        ctx.sendMessage(
+            format(
+                "<duration>",
+                "Skips the specified number of days/nights. If 0 is passed, disables skipping until new activated again. If night skipping is enabled, it's not possible to set up day skipping at the same time, and vice versa: check out "
+            ).appendCommandSuggestion("/skipnight force", "/skip(night|day) force").append(" (also described below).")
         )
+        ctx.sendMessage(format("stop", "Same as /skip(night|day) 0."))
+        ctx.sendMessage(format("inf", "Skips nights/days indefinitely until disabled."))
+        ctx.sendMessage(
+            format(
+                "force",
+                "Allows to skip one night/day even if skipping days/nights has been enabled. For example, if night skipping is enabled, /skipday force can be used to skip to the night (which will not be skipped for this time) and see your build at night. The next night will be skipped as usual."
+            )
+        )
+        ctx.sendMessage(format("status", "Shows the number of nights/days to be skipped."))
+
+        return 1
     }
 
     /**
@@ -176,9 +214,10 @@ object SkipDayNight : ServerCommandHandlerBase("skipdaynight") {
     private fun skipPeriod(
         mode: Mode,
         duration: Int,
-        isInfinite: Boolean,
         ctx: CommandContext<ServerCommandSource>
     ): Int {
+        val isInfinite = duration == -1
+
         if (mode.opposite!!.associatedEntry.isSet()) {
 
             ctx.source.sendMessage(
@@ -189,16 +228,20 @@ object SkipDayNight : ServerCommandHandlerBase("skipdaynight") {
             )
             return 0
         }
-
-        mode.associatedEntry = SkipPeriod(duration, isInfinite)
+        // updated: now preserve duration if mode is set to infinite instead of setting it to 0
+        if (!isInfinite) {
+            mode.associatedEntry = SkipPeriod(duration, false)
+        } else {
+            mode.associatedEntry = SkipPeriod(mode.associatedEntry.period, true)
+        }
         SkipDayNightUtils.forceUpdateConfig()
 
         ctx.source.sendMessage(
-            if (duration > 0)
+            if (duration > 0 || isInfinite)
                 Text.literal("${mode.name.sentenceCase()} skipping set to: %c{${mode.associatedEntry}}")
                     .multiColored(listOf(mode.color), Utils.Colors.CYAN)
             else
-                Text.literal("${mode.name.sentenceCase()} skipping successfully disabled.")
+                Text.literal("${mode.name.sentenceCase()} skipping successfully disabled.").formatted(Formatting.GREEN)
         )
         return 1
     }

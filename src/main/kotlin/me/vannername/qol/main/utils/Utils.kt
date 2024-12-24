@@ -1,13 +1,16 @@
 package me.vannername.qol.main.utils
 
 import com.mojang.brigadier.context.CommandContext
+import me.fzzyhmstrs.fzzy_config.api.ConfigApi
 import me.vannername.qol.main.QoLMod
 import net.minecraft.entity.EntityType
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import java.awt.Color
+import java.util.*
 import java.util.regex.Pattern
 
 object Utils {
@@ -195,4 +198,12 @@ object Utils {
         EntityType.BREEZE,
         EntityType.SHULKER_BULLET
     )
+
+    fun saveConfig(uuid: UUID) {
+        ConfigApi.save(QoLMod.playerConfigs[uuid]!!)
+    }
+
+    fun saveConfig(player: PlayerEntity) {
+        saveConfig(player.uuid)
+    }
 }

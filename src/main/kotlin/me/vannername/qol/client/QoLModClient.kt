@@ -29,7 +29,7 @@ object QoLModClient : ClientModInitializer {
 
         ClientTickEvents.END_WORLD_TICK.register { world ->
             for (p in world.players) {
-                TPCreditsComputation.tick(p, 5)
+                TPCreditsComputation.tick(p, 5.0)
             }
         }
 

@@ -27,6 +27,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
+import kotlin.Throws
 
 object Navigate : ServerCommandHandlerBase("navigate", listOf("nav")) {
 
@@ -146,12 +147,12 @@ object Navigate : ServerCommandHandlerBase("navigate", listOf("nav")) {
             .register(NavigateCommandNodeKeys.CONTINUE)
 
         CommandManager
-            .argument("coords", BlockPosArgumentType.blockPos())
+            .argument("x,y,z", BlockPosArgumentType.blockPos())
             // if sent by the player, only coordinates in the local world
             // are autofilled. Otherwise, all coordinates.
             .suggests(BlockPosArgumentType.blockPos()::listSuggestions)
             .executes { ctx ->
-                startNavigation(BlockPosArgumentType.getBlockPos(ctx, "coords"), false, ctx)
+                startNavigation(BlockPosArgumentType.getBlockPos(ctx, "x,y,z"), false, ctx)
             }
             .register(NavigateCommandNodeKeys.COORDS)
 
@@ -183,7 +184,7 @@ object Navigate : ServerCommandHandlerBase("navigate", listOf("nav")) {
             .suggests(BoolArgumentType.bool()::listSuggestions)
             .executes { ctx ->
                 val coords = try {
-                    BlockPosArgumentType.getBlockPos(ctx, "coords")
+                    BlockPosArgumentType.getBlockPos(ctx, "x,y,z")
                 } catch (e: Exception) {
                     e.printStackTrace()
                     SavedLocations.getByName(StringArgumentType.getString(ctx, "location_name"))
@@ -263,12 +264,13 @@ object Navigate : ServerCommandHandlerBase("navigate", listOf("nav")) {
         val p = ctx.source.playerOrThrow
         val navData = p.getConfig().navData
         if (navData.reached) {
-            return ctx.sendCommandError("You haven't yet started navigating or have already reached your destination")
+            return ctx.sendCommandError("You haven't yet started navigating or have already reached your destination.")
         }
-        if (!navData.target.get().isInSameWorld(p.world)) {
+        if (!navData.target.getWBP().isInSameWorld(p.world)) {
             return ctx.sendCommandError("You are not in the same world as your destination.")
         }
-        p.startNavigation(navData.target.get(), navData.isDirect)
+        p.startNavigation(navData.target.getWBP(), navData.isDirect)
+        p.sendSimpleMessage("Continuing navigation!", Formatting.AQUA)
         return 1
     }
 
@@ -284,7 +286,7 @@ object Navigate : ServerCommandHandlerBase("navigate", listOf("nav")) {
         ServerTickEvents.END_SERVER_TICK.register { server ->
             for (p in server.playerManager.playerList) {
                 val navData = p.getConfig().navData
-                val target = navData.target.get()
+                val target = navData.target.getWBP()
 
                 if (navData.isNavigating) {
 

@@ -3,20 +3,67 @@ package me.vannername.qol.main.commands.serverchest
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.mojang.serialization.JsonOps
+import me.vannername.qol.main.QoLMod
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import java.io.File
 
 object ServerChestUtils {
-    private lateinit var serverChest: SimpleInventory
+    object ServerChest : SimpleInventory(27) {
+        init {
+            deserializeAndLoad()
+            QoLMod.logger.debug("Server chest successfully deserialized.")
+        }
+
+        override fun onClose(player: PlayerEntity?) {
+            serializeAndSave()
+            QoLMod.logger.debug("Server chest successfully serialized.")
+        }
+
+        fun serializeAndSave() {
+            val storageFile = getStorageFile()
+            storageFile.writeText("") // empty the file
+            for (i in 0..26) {
+                getStack(i).run {
+                    if (!isEmpty) {
+                        try {
+                            storageFile.appendText("$i|${serializeItemStack(this)}\n")
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
+        }
+
+        fun deserializeAndLoad(): Map<Int, ItemStack> {
+            var serverChestData: MutableMap<Int, ItemStack> = mutableMapOf()
+            try {
+                val data = getStorageFile().readText().takeIf { !it.isEmpty() } ?: return serverChestData
+                val entries = data.split("\n")
+                for (item in entries) {
+                    if (!item.isEmpty()) {
+                        val split = item.split("|")
+                        val slot = split[0].toInt()
+                        val itemStack = split[1]
+                        val stack = deserializeItemStack(itemStack)
+                        setStack(slot, stack)
+//                        serverChestData += slot to stack
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return serverChestData
+        }
+    }
+
+    private lateinit var serverChest: ServerChest
 
     fun loadServerChest() {
         if (!::serverChest.isInitialized) {
-            val serverChestData: Map<Int, ItemStack> = deserializeServerChest()
-            serverChest = SimpleInventory(27)
-            for ((slot, item) in serverChestData) {
-                serverChest.setStack(slot, item)
-            }
+            serverChest = ServerChest
         }
     }
 
@@ -37,26 +84,6 @@ object ServerChestUtils {
         return stackDecoded.result().get().first
     }
 
-    fun deserializeServerChest(): Map<Int, ItemStack> {
-        var serverChestData: Map<Int, ItemStack> = mutableMapOf()
-        try {
-            val data = getStorageFile().readText().takeIf { !it.isEmpty() } ?: return serverChestData
-            val entries = data.split("\n")
-            for (item in entries) {
-                if (!item.isEmpty()) {
-                    val split = item.split("|")
-                    val slot = split[0].toInt()
-                    val itemStack = split[1]
-                    val stack = deserializeItemStack(itemStack)
-                    serverChestData += slot to stack
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return serverChestData
-    }
-
     fun getStorageFile(): File {
         // create a file if it doesn't exist, return regardless
         return File("config/vannername-qol-mod/serverchest.txt").apply {
@@ -64,21 +91,7 @@ object ServerChestUtils {
         }
     }
 
-    fun serializeServerChest() {
-        if (::serverChest.isInitialized) {
-            val storageFile = getStorageFile()
-            storageFile.writeText("") // empty the file
-            for (i in 0..26) {
-                serverChest.getStack(i).run {
-                    if (!isEmpty) {
-                        try {
-                            storageFile.appendText("$i|${serializeItemStack(this)}\n")
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }
-        }
+    fun saveServerChest() {
+        serverChest.serializeAndSave()
     }
 }

@@ -12,6 +12,7 @@ import net.minecraft.util.Formatting
 object AFKUtils {
     fun ServerPlayerEntity.startAFK() {
         getConfig().isAFK = true
+        Utils.saveConfig(this)
         ConfigApi.network().send(AFKPayload(true), this)
         isGlowing = true
         isInvulnerable = true
@@ -23,13 +24,14 @@ object AFKUtils {
 
     fun ServerPlayerEntity.stopAFK() {
         getConfig().isAFK = false
+        Utils.saveConfig(this)
         isGlowing = false
         Thread {
             Thread.sleep(3 * 1000)
             isInvulnerable = false
         }.start()
         Utils.broadcast(
-            Text.literal(name.string).setStyle(styledDisplayName.style).append(" has gone AFK!")
+            Text.literal(name.string).setStyle(styledDisplayName.style).append(" has left AFK!")
         )//.multiColored(Formatting.RED))
         sendSimpleMessage("You are no longer AFK!", Formatting.GREEN)
     }

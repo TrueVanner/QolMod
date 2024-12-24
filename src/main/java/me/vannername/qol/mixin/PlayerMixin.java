@@ -7,6 +7,7 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ public abstract class PlayerMixin extends LivingEntityMixin {
     }
 
     @Override
-    public void onPlayerDeath(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    public void onPlayerDeath(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         PlayerEntity p = (PlayerEntity) (Object) this;
 
         PlayerConfig data = PlayerUtils.getConfig(p);

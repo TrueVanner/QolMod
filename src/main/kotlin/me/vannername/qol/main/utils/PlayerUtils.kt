@@ -6,6 +6,7 @@ import me.vannername.qol.main.utils.Utils.multiColored
 import net.minecraft.entity.decoration.ItemFrameEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -15,7 +16,7 @@ object PlayerUtils {
     /**
      * Displays player's current coordinates above the hotbar.
      */
-    fun PlayerEntity.displayActionbarCoords() {
+    fun ServerPlayerEntity.displayActionbarCoords() {
         val data = getConfig()
         if (data.sendCoordinatesAboveHotbar) {
             val pos = blockPos
@@ -34,12 +35,12 @@ object PlayerUtils {
      * Displays the coordinates of the player's navigation target above the hotbar.
      * Overwrites the current coordinates if they are being displayed.
      */
-    fun PlayerEntity.displayNavCoords() {
+    fun ServerPlayerEntity.displayNavCoords() {
         val data = getConfig()
 
         if (data.navData.isNavigating) {
             val from = blockPos
-            val to = data.navData.target.get()
+            val to = data.navData.target.getWBP()
             val colors = listOf(
                 data.colorsOfNavigationCoords.colorOfText.toInt(),
                 data.colorsOfNavigationCoords.colorOfCoords.toInt()
@@ -86,16 +87,16 @@ object PlayerUtils {
      * Simplifies sending a debug message with yellow formatting.
      */
     fun PlayerEntity.sendDebugMessage(message: Any) {
-        val toSend = Text.literal("[QoLMod] ${message}")
+        val toSend = Text.literal("[QoLMod] $message")
             .formatted(Formatting.YELLOW)
         sendMessage(toSend, false)
     }
 
-    fun PlayerEntity.getCoordsString(): String {
+    fun ServerPlayerEntity.getCoordsString(): String {
         return "${blockPos.x} ${blockPos.y} ${blockPos.z}"
     }
 
-    fun PlayerEntity.lightUpNearestInvisibleItemFrames() {
+    fun ServerPlayerEntity.lightUpNearestInvisibleItemFrames() {
         // each frame that is invisible is added to the list if the player
         // is holding an amethyst shard in their offhand. Otherwise,
         // the list is empty - thanks to this, the next function immediately
@@ -125,7 +126,7 @@ object PlayerUtils {
         }
     }
 
-    fun PlayerEntity.coloredName(): MutableText {
+    fun ServerPlayerEntity.coloredName(): MutableText {
         return Text.literal(name.string).setStyle(styledDisplayName.style)
     }
 }

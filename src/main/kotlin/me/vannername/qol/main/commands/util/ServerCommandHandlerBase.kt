@@ -23,13 +23,7 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
-import kotlin.collections.drop
-import kotlin.collections.first
-import kotlin.collections.plus
-import kotlin.jvm.Throws
-import kotlin.text.lowercase
-import kotlin.text.trim
-import kotlin.to
+import kotlin.Throws
 
 /**
  * A class that provides a template for command handlers.
@@ -289,7 +283,10 @@ abstract class ServerCommandHandlerBase(val commandName: String, val aliases: Li
      */
     @Throws(CommandSyntaxException::class)
     protected open fun help(ctx: CommandContext<ServerCommandSource>): Int {
-        ctx.sendSimpleMessage("HELP MESSAGE FOR /$commandName", Formatting.YELLOW)
+        ctx.sendSimpleMessage("Help message for /$commandName", Formatting.YELLOW)
+        if (aliases.isNotEmpty()) {
+            ctx.sendSimpleMessage("Aliases: ${aliases.map { alias -> "/$alias" }}", Formatting.YELLOW)
+        }
         for (descr in pathDescriptions) {
             val path = pathToString(descr.key)
             ctx.sendMessage(

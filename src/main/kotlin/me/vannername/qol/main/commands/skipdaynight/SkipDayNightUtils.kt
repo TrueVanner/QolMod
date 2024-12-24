@@ -6,14 +6,13 @@ import me.fzzyhmstrs.fzzy_config.util.Walkable
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import me.vannername.qol.main.QoLMod
 import me.vannername.qol.main.QoLMod.serverConfig
-import me.vannername.qol.main.config.ServerConfig
 import me.vannername.qol.main.utils.Utils
 import me.vannername.qol.main.utils.Utils.sentenceCase
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.world.World
-import kotlin.ranges.contains
+import kotlin.Throws
 
 object SkipDayNightUtils {
     /**
@@ -93,7 +92,7 @@ object SkipDayNightUtils {
                         it.sendMessage(
                             Text.literal("${mode.name.sentenceCase()} successfully skipped!").formatted(Formatting.AQUA)
                         )
-                        if (currentValue == 0) {
+                        if (currentValue == 0 && !mode.associatedEntry.isInfinite) {
                             it.sendMessage(
                                 Text.literal("Warning: this was the last ${mode.name.lowercase()} skip.")
                                     .formatted(Formatting.YELLOW)
@@ -141,6 +140,6 @@ object SkipDayNightUtils {
         serverConfig.skippingSettings.daysToSkip = Mode.DAY.associatedEntry
         serverConfig.skippingSettings.nightsToSkip = Mode.NIGHT.associatedEntry
 
-        ConfigApi.save<ServerConfig>(serverConfig)
+        ConfigApi.save(serverConfig)
     }
 }

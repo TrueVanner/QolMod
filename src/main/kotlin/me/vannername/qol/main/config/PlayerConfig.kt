@@ -3,11 +3,9 @@ package me.vannername.qol.main.config
 import me.fzzyhmstrs.fzzy_config.annotations.ClientModifiable
 import me.fzzyhmstrs.fzzy_config.config.Config
 import me.fzzyhmstrs.fzzy_config.config.ConfigSection
-import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedAny
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedColor
 import me.vannername.qol.main.utils.Utils
 import me.vannername.qol.main.utils.WorldBlockPos
-import net.minecraft.world.World
 import java.util.*
 
 // WARNING: setting object of PlayerData with null values throws an exception!
@@ -47,7 +45,7 @@ class PlayerConfig(uuid: UUID) : Config(Utils.MyIdentifier(uuid.toString()), "pl
 
     class PlayerNavigationData(
         isNavigating: Boolean = false,
-        target: WorldBlockPos = WorldBlockPos(0, 0, 0, World.OVERWORLD),
+        target: WorldBlockPos = WorldBlockPos(),
         isDirect: Boolean = false,
         reached: Boolean = true
     ) : ConfigSection() {
@@ -56,8 +54,10 @@ class PlayerConfig(uuid: UUID) : Config(Utils.MyIdentifier(uuid.toString()), "pl
         @ClientModifiable
         var isNavigating = isNavigating
 
-        var target = ValidatedAny(target)
+        var target = WorldBlockPos.Validated(target)
 
+        //        var test = ValidatedMap(mapOf(listOf(0,0,0) to "minecraft:overworld"), ValidatedList(listOf(0,0,0), ValidatedInt()), ValidatedString())
+//        var test = (mapOf(listOf(0,0,0) to "test"), ValidatedList(listOf(0,0,0), ValidatedInt()), ValidatedString())
         @ClientModifiable
         var isDirect = isDirect
         var reached = reached

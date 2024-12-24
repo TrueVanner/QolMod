@@ -3,6 +3,7 @@ package me.vannername.qol.main.commands.navigate
 import com.google.common.base.Predicate
 import me.vannername.qol.main.config.PlayerConfig
 import me.vannername.qol.main.utils.PlayerUtils.getConfig
+import me.vannername.qol.main.utils.Utils
 import me.vannername.qol.main.utils.WorldBlockPos
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.LodestoneTrackerComponent
@@ -17,7 +18,7 @@ import net.minecraft.util.math.GlobalPos
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.Optional
+import java.util.*
 
 object NavigateUtils {
     /**
@@ -26,19 +27,20 @@ object NavigateUtils {
      * - If the player has the mod installed client-side, a compass will be rendered next to their hotbar pointing
      * to the destination.
      *
-     * @param to The coordinates to navigate to.
+     * @param dest The coordinates to navigate to.
      * @param isDirect if true, navigation will stop only when the coordinate is reached.
      * Otherwise, navigation is stopped if the player is within 3 blocks of the target.
      */
-    fun ServerPlayerEntity.startNavigation(to: WorldBlockPos, isDirect: Boolean) {
-        getConfig().navData.isNavigating = true
+    fun ServerPlayerEntity.startNavigation(dest: WorldBlockPos, isDirect: Boolean) {
         getConfig().navData =
-            PlayerConfig.PlayerNavigationData(true, to, isDirect)
-        giveCompass(to)
+            PlayerConfig.PlayerNavigationData(true, dest, isDirect, false)
+        Utils.saveConfig(this)
+        giveCompass(dest)
     }
 
     fun ServerPlayerEntity.stopNavigation() {
         getConfig().navData.isNavigating = false
+        Utils.saveConfig(this)
         removeCompass()
     }
 
@@ -51,13 +53,13 @@ object NavigateUtils {
     fun decomposeCoordFinderLocations(): Map<String, WorldBlockPos> {
         try {
             val fileContents = Files.readAllLines(Path.of("config/coordfinder/places.properties"))
-            return fileContents.map { line ->
+            return fileContents.associate { line ->
                 // format: name=worldID,x,y,z
                 val split = line.split("=")
                 val name = split[0]
                 val coords = split[1].split(",")
                 name to WorldBlockPos(coords[1].toInt(), coords[2].toInt(), coords[3].toInt(), coords[0])
-            }.toMap()
+            }
         } catch (_: IOException) {
             // if the file doesn't exist
             return emptyMap()

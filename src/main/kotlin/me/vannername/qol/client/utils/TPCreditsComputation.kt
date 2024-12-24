@@ -56,7 +56,7 @@ object TPCreditsComputation {
         return abs(1 - distancesRelation) > 0.1
     }
 
-    fun tick(p: AbstractClientPlayerEntity, secondsBetweenTicks: Int) {
+    fun tick(p: AbstractClientPlayerEntity, secondsBetweenTicks: Double) {
         // only tick once per secondsBetweenTicks seconds
         if (System.currentTimeMillis() - lastTick < secondsBetweenTicks * 1000) {
             return

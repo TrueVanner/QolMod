@@ -6,18 +6,19 @@
     "gDg"
   ],
   "key": {
-    "g": {
-      "item": "minecraft:gold_ingot"
-    },
-    "D": {
-      "item": "minecraft:diamond"
-    },
-    "E": {
-      "item": "minecraft:ender_chest"
-    }
+    "g": [
+      "minecraft:gold_ingot"
+    ],
+    "D": [
+      "minecraft:diamond"
+    ],
+    "E": [
+      "minecraft:ender_chest"
+    ]
   },
   "result": {
     "id": "vannername-qol-mod:server_chest",
     "count": 1
-  }
+  },
+  "show_notification": false
 }
