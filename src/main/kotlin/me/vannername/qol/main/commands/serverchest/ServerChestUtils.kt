@@ -92,6 +92,9 @@ object ServerChestUtils {
     }
 
     fun saveServerChest() {
-        serverChest.serializeAndSave()
+        // fix: this caused a server error
+        if (::serverChest.isInitialized) {
+            serverChest.serializeAndSave()
+        }
     }
 }
